@@ -2,5 +2,6 @@
   <Project Path="Common/Common.csproj" />
   <Project Path="DataContext/DataContext.csproj" />
   <Project Path="Repository/Repository.csproj" />
+  <Project Path="Service/Service.csproj" />
   <Project Path="SmartFreelancerApi/SmartFreelancerApi.csproj" />
 </Solution>
