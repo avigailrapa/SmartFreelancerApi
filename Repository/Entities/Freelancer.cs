@@ -2,7 +2,6 @@
 namespace Repository.Entities
 {
 
-
 	public class Freelancer
 	{
 		public int FreelancerId { get; set; }

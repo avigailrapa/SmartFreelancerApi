@@ -1,14 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Reflection.Emit;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Repository.Entities;
 using Repository.interfaces;
 
 
 namespace FreelancersApi.DataContext
 {
-	public class FreelancerContext : DbContext, IContext
-	{
+    public class FreelancerContext:DbContext,IContext
+    {
 		private readonly string connection;
 		public FreelancerContext(string connection)
 		{
@@ -18,10 +16,10 @@ namespace FreelancersApi.DataContext
 		public virtual DbSet<Freelancer> Freelancers { get; set; }
 		public virtual DbSet<Category> Categories { get; set; }
 		public virtual DbSet<Job> Jobs { get; set; }
-		public virtual DbSet<Rating> Ratings { get; set; }
+		public	virtual DbSet<Rating> Ratings { get; set; }
 
-
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+       
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			optionsBuilder.UseSqlServer(connection);
 		}
