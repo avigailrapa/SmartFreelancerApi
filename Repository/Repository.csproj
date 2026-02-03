@@ -8,11 +8,18 @@
 
   <ItemGroup>
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     <Folder Include="Entities\" />
 >>>>>>> 009d5de (feat(Repository): add initial Repository folder with interfaces,)
     <Folder Include="interfaces\" />
+=======
+>>>>>>> 9966e6f (feat(Data): add IContext interface and EF Core package reference)
     <Folder Include="Repositories\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.20" />
   </ItemGroup>
 
 </Project>
