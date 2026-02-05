@@ -1,6 +1,6 @@
 ﻿namespace Service.Interfaces
 {
-	internal interface IService<T>
+	public interface IService<T>
 	{
 		Task<List<T>> GetAll();
 		Task<T> GetById(int id);
