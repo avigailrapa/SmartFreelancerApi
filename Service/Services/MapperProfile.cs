@@ -4,7 +4,7 @@ using Repository.Entities;
 
 namespace Service.Services
 {
-    internal class MapperProfile : Profile
+	    public class MapperProfile : Profile
     {
 
         public MapperProfile()
