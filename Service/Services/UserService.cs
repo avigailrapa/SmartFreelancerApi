@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Common;
 using Common.Dto;
 using Repository.Entities;
 using Repository.interfaces;
@@ -6,7 +7,7 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class UserService : IService<UserDto>
+    public class UserService : IService<UserDto>,IsExist<UserDto>
     {
         private readonly IRepository<User> repository;
         private readonly IMapper mapper;
@@ -45,5 +46,15 @@ namespace Service.Services
             var updated = await repository.UpdateItem(id, mapper.Map<User>(user));
             return mapper.Map<UserDto>(updated);
         }
-    }
+
+		public UserDto Exist(Login login)
+		{
+			var user=GetAll().Result.FirstOrDefault(u=>u.FullName==login.UserName && u.Email==login.Password);
+            if (user != null)
+                return user;
+            return null;
+
+		}
+
+	}
 }
