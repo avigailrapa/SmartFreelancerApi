@@ -5,9 +5,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Repository.Entities;
 using Repository.interfaces;
+using Repository.Repositories;
 using Service.Services;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -64,8 +65,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 		});
 var connection = builder.Configuration.GetConnectionString("database-home");
 
+// הזרקת ה-Context
 builder.Services.AddSingleton<IContext>(new FreelancerContext(connection));
-builder.Services.AddAutoMapper(typeof(MapperProfile));
+
+// --- התיקון של ה-AutoMapper מתחיל כאן ---
+builder.Services.AddAutoMapper(cfg =>
+{
+	// השורה הזו פותרת את שגיאת ה-MaxFloat
+	cfg.ShouldMapMethod = (m => false);
+
+	// הוספת הפרופיל שלך
+	cfg.AddProfile<MapperProfile>();
+}, typeof(MapperProfile));
+// --- סוף התיקון ---
+
 builder.Services.AddServices();
 
 

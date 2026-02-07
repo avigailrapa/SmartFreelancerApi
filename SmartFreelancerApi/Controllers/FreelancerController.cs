@@ -1,4 +1,5 @@
-﻿using Common.Dto;
+﻿using System.Text;
+using Common.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -31,13 +32,27 @@ namespace SmartFreelancerApi.Controllers
 
         // POST api/<FreelancerController>
         [HttpPost]
-        public async Task<FreelancerDto> Post([FromBody] FreelancerDto freelancer)
+        public async Task<FreelancerDto> Post([FromForm] FreelancerDto freelancer)
         {
+			if (freelancer.ImageFile != null)
+			{
+				// צור שם ייחודי לקובץ
+				var fileName = Guid.NewGuid() + Path.GetExtension(freelancer.ImageFile.FileName);
+				var path = Path.Combine(Environment.CurrentDirectory, "Images/", fileName);
+
+				// שמור את הקובץ על הדיסק
+				using var fs = new FileStream(path, FileMode.Create);
+				await freelancer.ImageFile.CopyToAsync(fs);
+
+				// שמור את שם הקובץ ב-DTO (כ־byte[])
+				freelancer.ArrImage = Encoding.UTF8.GetBytes(fileName);
+			}
+
             return await service.AddItem(freelancer);
 		}
 
-        // PUT api/<FreelancerController>/5
-        [HttpPut("{id}")]
+		// PUT api/<FreelancerController>/5
+		[HttpPut("{id}")]
         public async Task<FreelancerDto> Put(int id, [FromBody] FreelancerDto freelancer)
         {
             return await service.UpdateItem(id, freelancer);

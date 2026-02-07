@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Common.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -31,7 +32,9 @@ namespace SmartFreelancerApi.Controllers
 
         // POST api/<ValuesController1>
         [HttpPost]
-        public async Task<JobDto> Post([FromBody] JobDto job)
+		[Authorize(Roles = "user")]
+
+		public async Task<JobDto> Post([FromBody] JobDto job)
         {
             return await service.AddItem(job);
 		}

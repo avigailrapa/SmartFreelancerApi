@@ -11,9 +11,8 @@ namespace Service.Services
 		{
 			services.AddRepository();
 			services.AddScoped<IService<CategoryDto>, CategoryService>();
-			//services.AddScoped<IsExist<BabyDto>, BabyService>();
+			services.AddScoped<IsExist<UserDto>, UserService>();
 			services.AddScoped<IService<UserDto>, UserService>();
-			//services.AddScoped<IsExist<NurseDto>, NurseService>();
 			services.AddScoped<IService<JobDto>, JobService>();
 			services.AddScoped<IService<FreelancerDto>, FreelancerService>();
 			services.AddScoped<IService<RatingDto>, RatingService>();

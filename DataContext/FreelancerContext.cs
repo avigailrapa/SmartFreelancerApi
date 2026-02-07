@@ -18,8 +18,8 @@ namespace FreelancersApi.DataContext
 		public virtual DbSet<Job> Jobs { get; set; }
 		public	virtual DbSet<Rating> Ratings { get; set; }
 
-       
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			optionsBuilder.UseSqlServer(connection);
 		}

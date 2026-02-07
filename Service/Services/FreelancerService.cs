@@ -17,13 +17,16 @@ namespace Service.Services
             this.repository = repository;
         }
 
-        public async Task<FreelancerDto> AddItem(FreelancerDto freelancer)
-        {
-            var entity = await repository.AddItem(mapper.Map<Freelancer>(freelancer));
-            return mapper.Map<FreelancerDto>(entity);
-        }
+		public async Task<FreelancerDto> AddItem(FreelancerDto freelancer)
+		{
+			var entity = mapper.Map<Freelancer>(freelancer);
+            await repository.AddItem(entity);
+            var saved = await repository.GetById(entity.FreelancerId);
+            return mapper.Map<FreelancerDto>(saved);
+		}
 
-        public async Task DeleteItem(int id)
+
+		public async Task DeleteItem(int id)
         {
             await repository.DeleteItem(id);
         }
