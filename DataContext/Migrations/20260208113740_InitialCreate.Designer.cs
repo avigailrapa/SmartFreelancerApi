@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataContext.Migrations
 {
     [DbContext(typeof(FreelancerContext))]
-    [Migration("20260203185822_init")]
-    partial class init
+    [Migration("20260208113740_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -149,6 +149,45 @@ namespace DataContext.Migrations
                     b.ToTable("Jobs");
                 });
 
+            modelBuilder.Entity("Repository.Entities.Proposal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EstimatedHours")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FreelancerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("JobId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FreelancerId");
+
+                    b.HasIndex("JobId");
+
+                    b.ToTable("Proposals");
+                });
+
             modelBuilder.Entity("Repository.Entities.Rating", b =>
                 {
                     b.Property<int>("Id")
@@ -263,6 +302,24 @@ namespace DataContext.Migrations
                     b.Navigation("Client");
                 });
 
+            modelBuilder.Entity("Repository.Entities.Proposal", b =>
+                {
+                    b.HasOne("Repository.Entities.Freelancer", "Freelancer")
+                        .WithMany("ProposalsSubmitted")
+                        .HasForeignKey("FreelancerId")
+                        .IsRequired();
+
+                    b.HasOne("Repository.Entities.Job", "Job")
+                        .WithMany("Proposals")
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Freelancer");
+
+                    b.Navigation("Job");
+                });
+
             modelBuilder.Entity("Repository.Entities.Rating", b =>
                 {
                     b.HasOne("Repository.Entities.Freelancer", "Freelancer")
@@ -286,9 +343,16 @@ namespace DataContext.Migrations
                 {
                     b.Navigation("JobsInProgress");
 
+                    b.Navigation("ProposalsSubmitted");
+
                     b.Navigation("RatingsReceived");
 
                     b.Navigation("Skills");
+                });
+
+            modelBuilder.Entity("Repository.Entities.Job", b =>
+                {
+                    b.Navigation("Proposals");
                 });
 
             modelBuilder.Entity("Repository.Entities.User", b =>

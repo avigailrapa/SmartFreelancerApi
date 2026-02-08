@@ -13,11 +13,13 @@ namespace Repository.Entities
 		public DateTime Deadline { get; set; }
 		public int MaxPayPerHour { get; set; }
 
-		public JobStatus Status { get; set; }
+		public JobStatus Status { get; set; } = JobStatus.Open;
 
 		public int? AssignedFreelancerId { get; set; }
 		public Freelancer? AssignedFreelancer { get; set; }
 
 		public ICollection<Category> RequiredSkills { get; set; } = new List<Category>();
+		public ICollection<Proposal> Proposals { get; set; }= new List<Proposal>();
+
 	}
 }

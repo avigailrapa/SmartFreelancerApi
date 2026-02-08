@@ -16,7 +16,6 @@ namespace Common.Dto
 		public int HourlyRate { get; set; }
 		public ExperienceLevel ExperienceLevel { get; set; }
 		public FreelancerStatus Status { get; set; }
-		public ICollection<JobDto> JobsInProgress { get; set; } = new List<JobDto>();
 
 
 	}

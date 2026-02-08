@@ -19,5 +19,7 @@ namespace Repository.Entities
 		public ICollection<Category> Skills { get; set; } = new List<Category>();
 		public ICollection<Job> JobsInProgress { get; set; } = new List<Job>();
 		public ICollection<Rating> RatingsReceived { get; set; } = new List<Rating>();
+		public ICollection<Proposal> ProposalsSubmitted { get; set; } = new List<Proposal>();
+
 	}
 }

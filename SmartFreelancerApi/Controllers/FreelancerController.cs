@@ -3,7 +3,6 @@ using Common.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace SmartFreelancerApi.Controllers
 {
@@ -36,15 +35,12 @@ namespace SmartFreelancerApi.Controllers
         {
 			if (freelancer.ImageFile != null)
 			{
-				// צור שם ייחודי לקובץ
 				var fileName = Guid.NewGuid() + Path.GetExtension(freelancer.ImageFile.FileName);
 				var path = Path.Combine(Environment.CurrentDirectory, "Images/", fileName);
 
-				// שמור את הקובץ על הדיסק
 				using var fs = new FileStream(path, FileMode.Create);
 				await freelancer.ImageFile.CopyToAsync(fs);
 
-				// שמור את שם הקובץ ב-DTO (כ־byte[])
 				freelancer.ArrImage = Encoding.UTF8.GetBytes(fileName);
 			}
 
