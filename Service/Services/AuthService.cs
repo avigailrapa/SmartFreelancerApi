@@ -1,0 +1,91 @@
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using AutoMapper;
+using Common;
+using Common.Dto;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Repository.Entities;
+using Repository.interfaces;
+using Service.Interfaces;
+
+
+namespace Service.Services
+{
+    internal class AuthService(IRepository<User> userRepository, IRepository<Freelancer> freelancerRepository, IMapper mapper, IConfiguration configuration) : IAuthService
+    {
+        private readonly IRepository<User> userRepository = userRepository;
+        private readonly IRepository<Freelancer> freelancerRepository = freelancerRepository;
+        private readonly IMapper mapper = mapper;
+        private readonly IConfiguration configuration = configuration;
+
+        public async Task<UserDto> BecomeFreelancer(int userId, FreelancerDto freelancerDto)
+        {
+            var user = await userRepository.GetById(userId) ?? throw new Exception("User not found");
+
+            if (user.FreelancerProfile != null)
+                throw new Exception("User is already a freelancer");
+
+            var freelancer = mapper.Map<Freelancer>(freelancerDto);
+            var createdFreelancer = await freelancerRepository.AddItem(freelancer);
+            return new UserDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                FreelancerId = createdFreelancer.FreelancerId
+            };
+        }
+
+
+        public async Task<UserDto> Login(Login login)
+        {
+            var users = await userRepository.GetAll();
+            var user = users.FirstOrDefault(users => users.FullName == login.UserName && users.Password == login.Password) ?? throw new Exception("Invalid username or password");
+
+            return new UserDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                FreelancerId = user.FreelancerProfile?.FreelancerId
+            };
+        }
+
+        public async Task<UserDto> Register(UserDto user)
+        {
+            var existingUser = (await userRepository.GetAll())
+                .FirstOrDefault(u => u.FullName == user.FullName && u.Email == user.Email);
+            if (existingUser != null)
+                throw new Exception("User already exists");
+
+            var createdUser = await userRepository.AddItem(mapper.Map<User>(user));
+
+            return new UserDto
+            {
+                Id = createdUser.Id,
+                FullName = createdUser.FullName,
+                Email = createdUser.Email,
+                FreelancerId = null
+            };
+
+        }
+
+        public string GenerateToken(UserDto u)
+        {
+            var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
+            var claims = new[] {
+              new Claim("UserId", u.Id.ToString()),
+              new Claim(ClaimTypes.Role, u.FreelancerId != null ? "Freelancer" : "User")
+             };
+            var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"],
+                claims,
+                expires: DateTime.UtcNow.AddMinutes(15),
+                signingCredentials: credentials);
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+    }
+}

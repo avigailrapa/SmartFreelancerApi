@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Common;
 using Common.Dto;
 using Repository.Entities;
 using Repository.interfaces;
@@ -7,21 +6,15 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class UserService : IService<UserDto>,IsExist<UserDto>
+    public class UserService(IRepository<User> repository, IMapper mapper) : IService<UserDto>
     {
-        private readonly IRepository<User> repository;
-        private readonly IMapper mapper;
-
-        public UserService(IRepository<User> repository, IMapper mapper)
-        {
-            this.mapper = mapper;
-            this.repository = repository;
-        }
+        private readonly IRepository<User> repository = repository;
+        private readonly IMapper mapper = mapper;
 
         public async Task<UserDto> AddItem(UserDto user)
         {
-            var entity = await repository.AddItem(mapper.Map<User>(user));
-            return mapper.Map<UserDto>(entity);
+            throw new NotImplementedException("Use AuthService to create users.");
+
         }
 
         public async Task DeleteItem(int id)
@@ -47,14 +40,8 @@ namespace Service.Services
             return mapper.Map<UserDto>(updated);
         }
 
-		public UserDto Exist(Login login)
-		{
-			var user=GetAll().Result.FirstOrDefault(u=>u.FullName==login.UserName && u.Email==login.Password);
-            if (user != null)
-                return user;
-            return null;
 
-		}
 
-	}
+
+    }
 }

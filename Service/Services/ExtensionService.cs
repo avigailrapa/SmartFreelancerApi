@@ -7,17 +7,16 @@ namespace Service.Services
 {
     public static class ExtensionService
     {
-		public static IServiceCollection AddServices(this IServiceCollection services)
-		{
-			services.AddRepository();
-			services.AddScoped<IService<CategoryDto>, CategoryService>();
-			services.AddScoped<IsExist<UserDto>, UserService>();
-			services.AddScoped<IService<UserDto>, UserService>();
-			services.AddScoped<IService<JobDto>, JobService>();
-			services.AddScoped<IService<FreelancerDto>, FreelancerService>();
-			services.AddScoped<IService<RatingDto>, RatingService>();
+        public static IServiceCollection AddServices(this IServiceCollection services)
+        {
+            services.AddRepository();
+            services.AddScoped<IService<CategoryDto>, CategoryService>();
+            services.AddScoped<IService<UserDto>, UserService>();
+            services.AddScoped<IService<JobDto>, JobService>();
+            services.AddScoped<IService<FreelancerDto>, FreelancerService>();
+            services.AddScoped<IService<RatingDto>, RatingService>();
 
-			return services;
-		}
-	}
+            return services;
+        }
+    }
 }

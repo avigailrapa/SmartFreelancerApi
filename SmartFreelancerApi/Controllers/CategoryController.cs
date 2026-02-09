@@ -2,19 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoryController : ControllerBase
+    public class CategoryController(IService<CategoryDto> service) : ControllerBase
     {
-        private readonly IService<CategoryDto> service;
-        public CategoryController(IService<CategoryDto> service)
-        {
-            this.service = service;
-		}
+        private readonly IService<CategoryDto> service = service;
 
         // GET: api/<CategoryController>
         [HttpGet]
@@ -35,20 +30,20 @@ namespace SmartFreelancerApi.Controllers
         public async Task<CategoryDto> Post([FromBody] CategoryDto category)
         {
             return await service.AddItem(category);
-		}
+        }
 
         // PUT api/<CategoryController>/5
         [HttpPut("{id}")]
         public async Task<CategoryDto> Put(int id, [FromBody] CategoryDto category)
         {
             return await service.UpdateItem(id, category);
-		}
+        }
 
         // DELETE api/<CategoryController>/5
         [HttpDelete("{id}")]
         public async Task Delete(int id)
         {
             await service.DeleteItem(id);
-		}
+        }
     }
 }
