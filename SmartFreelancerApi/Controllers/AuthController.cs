@@ -1,5 +1,4 @@
-﻿using Common;
-using Common.Dto;
+﻿using Common.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -17,12 +16,16 @@ namespace SmartFreelancerApi.Controllers
         // POST: api/<AuthController>/login
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] Login login)
+        public async Task<IActionResult> Login([FromBody] LoginDto login, bool asFreelancer = false)
         {
             try
             {
                 var user = await authService.Login(login);
-                var token = authService.GenerateToken(user);
+
+                if (asFreelancer && user.FreelancerId == null)
+                    return BadRequest("User is not a freelancer");
+
+                var token = authService.GenerateToken(user, asFreelancer);
                 return Ok(new { Token = token, User = user });
             }
             catch (Exception ex)
@@ -40,7 +43,7 @@ namespace SmartFreelancerApi.Controllers
             try
             {
                 var newUser = await authService.Register(userDto);
-                var token = authService.GenerateToken(userDto);
+                var token = authService.GenerateToken(userDto, false);
                 return Ok(new { Token = token, User = userDto });
             }
             catch (Exception ex)
@@ -50,8 +53,14 @@ namespace SmartFreelancerApi.Controllers
         }
 
 
-
-
-
     }
+
+
+
+
+
+
+
+
+
 }

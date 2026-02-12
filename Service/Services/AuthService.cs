@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using System.Text;
 using AutoMapper;
-using Common;
 using Common.Dto;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -24,11 +23,19 @@ namespace Service.Services
         {
             var user = await userRepository.GetById(userId) ?? throw new Exception("User not found");
 
+
             if (user.FreelancerProfile != null)
                 throw new Exception("User is already a freelancer");
 
             var freelancer = mapper.Map<Freelancer>(freelancerDto);
+            freelancer.UserId = user.Id;
+            freelancer.User = user;
+
             var createdFreelancer = await freelancerRepository.AddItem(freelancer);
+
+            user.FreelancerProfile = createdFreelancer;
+            await userRepository.UpdateItem(user.Id, user);
+
             return new UserDto
             {
                 Id = user.Id,
@@ -39,7 +46,7 @@ namespace Service.Services
         }
 
 
-        public async Task<UserDto> Login(Login login)
+        public async Task<UserDto> Login(LoginDto login)
         {
             var users = await userRepository.GetAll();
             var user = users.FirstOrDefault(users => users.FullName == login.UserName && users.Password == login.Password) ?? throw new Exception("Invalid username or password");
@@ -72,20 +79,38 @@ namespace Service.Services
 
         }
 
-        public string GenerateToken(UserDto u)
+        public string GenerateToken(UserDto u, bool asFreelancer = false)
         {
             var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
-            var claims = new[] {
-              new Claim("UserId", u.Id.ToString()),
-              new Claim(ClaimTypes.Role, u.FreelancerId != null ? "Freelancer" : "User")
-             };
-            var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"],
+
+            var claims = new List<Claim>
+            {
+               new("UserId", u.Id.ToString()),
+               new(ClaimTypes.Role, "User")
+            };
+
+            if (asFreelancer && u.FreelancerId.HasValue)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Freelancer"));
+                claims.Add(new Claim("FreelancerId", u.FreelancerId.Value.ToString()));
+            }
+
+
+            var token = new JwtSecurityToken(
+                configuration["Jwt:Issuer"],
+                configuration["Jwt:Audience"],
                 claims,
                 expires: DateTime.UtcNow.AddMinutes(15),
-                signingCredentials: credentials);
+                signingCredentials: credentials
+            );
+
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+
+
     }
 }
+
+

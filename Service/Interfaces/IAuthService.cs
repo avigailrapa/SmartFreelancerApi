@@ -1,13 +1,12 @@
-﻿using Common;
-using Common.Dto;
+﻿using Common.Dto;
 
 namespace Service.Interfaces
 {
     public interface IAuthService
     {
         Task<UserDto> Register(UserDto user);
-        Task<UserDto> Login(Login login);
+        Task<UserDto> Login(LoginDto login);
         Task<UserDto> BecomeFreelancer(int userId, FreelancerDto freelancer);
-        string GenerateToken(UserDto user);
+        string GenerateToken(UserDto user, bool asFreelancer);
     }
 }
