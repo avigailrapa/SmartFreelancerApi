@@ -1,20 +1,22 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Repository.Entities;
 using Repository.interfaces;
+using Repository.Interfaces;
 
 namespace Repository.Repositories
 {
-	public static class ExtensionRepository
-	{
-		public static IServiceCollection AddRepository(this IServiceCollection services)
-		{
-			services.AddScoped<IRepository<Category>, CategoryRepository>();
-			services.AddScoped<IRepository<Freelancer>, FreelancerRepository>();
-			services.AddScoped<IRepository<Job>, JobRepository>();
-			services.AddScoped<IRepository<Rating>, RatingRepository>();
-			services.AddScoped<IRepository<User>, UserRepository>();
-			return services;
+    public static class ExtensionRepository
+    {
+        public static IServiceCollection AddRepository(this IServiceCollection services)
+        {
+            services.AddScoped<IRepository<Category>, CategoryRepository>();
+            services.AddScoped<IRepository<Freelancer>, FreelancerRepository>();
+            services.AddScoped<IRepository<Rating>, RatingRepository>();
+            services.AddScoped<IRepository<User>, UserRepository>();
 
-		}
-	}
+            services.AddScoped<IJobRepository, JobRepository>();
+            return services;
+
+        }
+    }
 }

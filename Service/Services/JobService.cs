@@ -1,21 +1,15 @@
 ﻿using AutoMapper;
 using Common.Dto;
 using Repository.Entities;
-using Repository.interfaces;
+using Repository.Interfaces;
 using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class JobService : IService<JobDto>
+    public class JobService(IJobRepository repository, IMapper mapper) : IJobService
     {
-        private readonly IRepository<Job> repository;
-        private readonly IMapper mapper;
-
-        public JobService(IRepository<Job> repository, IMapper mapper)
-        {
-            this.mapper = mapper;
-            this.repository = repository;
-        }
+        private readonly IJobRepository repository = repository;
+        private readonly IMapper mapper = mapper;
 
         public async Task<JobDto> AddItem(JobDto job)
         {
@@ -34,6 +28,12 @@ namespace Service.Services
             return mapper.Map<List<JobDto>>(jobs);
         }
 
+        public async Task<List<JobDto>> GetOpenJobs()
+        {
+            var jobs = await repository.GetOpenJobs();
+            return mapper.Map<List<JobDto>>(jobs);
+        }
+
         public async Task<JobDto> GetById(int id)
         {
             var job = await repository.GetById(id);
@@ -45,5 +45,11 @@ namespace Service.Services
             var updated = await repository.UpdateItem(id, mapper.Map<Job>(job));
             return mapper.Map<JobDto>(updated);
         }
+
+
+
+
+
+
     }
 }

@@ -19,33 +19,6 @@ namespace Service.Services
         private readonly IMapper mapper = mapper;
         private readonly IConfiguration configuration = configuration;
 
-        public async Task<UserDto> BecomeFreelancer(int userId, FreelancerDto freelancerDto)
-        {
-            var user = await userRepository.GetById(userId) ?? throw new Exception("User not found");
-
-
-            if (user.FreelancerProfile != null)
-                throw new Exception("User is already a freelancer");
-
-            var freelancer = mapper.Map<Freelancer>(freelancerDto);
-            freelancer.UserId = user.Id;
-            freelancer.User = user;
-
-            var createdFreelancer = await freelancerRepository.AddItem(freelancer);
-
-            user.FreelancerProfile = createdFreelancer;
-            await userRepository.UpdateItem(user.Id, user);
-
-            return new UserDto
-            {
-                Id = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                FreelancerId = createdFreelancer.FreelancerId
-            };
-        }
-
-
         public async Task<UserDto> Login(LoginDto login)
         {
             var users = await userRepository.GetAll();

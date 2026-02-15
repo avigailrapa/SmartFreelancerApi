@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Text;
+using AutoMapper;
 using Common.Dto;
 using Repository.Entities;
 using Repository.interfaces;
@@ -6,29 +7,18 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class FreelancerService : IService<FreelancerDto>
+    public class FreelancerService(IRepository<Freelancer> repository, IMapper mapper, IRepository<User> userRepository) : IFreelancerService<FreelancerDto>
     {
-        private readonly IRepository<Freelancer> repository;
-        private readonly IMapper mapper;
+        private readonly IRepository<Freelancer> repository = repository;
+        private readonly IMapper mapper = mapper;
+        private readonly IRepository<User> userRepository = userRepository;
 
-        public FreelancerService(IRepository<Freelancer> repository, IMapper mapper)
-        {
-            this.mapper = mapper;
-            this.repository = repository;
-        }
-
-        public async Task<FreelancerDto> AddItem(FreelancerDto freelancer)
-        {
-            throw new NotImplementedException("Use AuthService.BecomeFreelancer to create freelancers.");
-
-        }
 
 
         public async Task DeleteItem(int id)
         {
             await repository.DeleteItem(id);
         }
-
         public async Task<List<FreelancerDto>> GetAll()
         {
             var freelancers = await repository.GetAll();
@@ -46,5 +36,45 @@ namespace Service.Services
             var updated = await repository.UpdateItem(id, mapper.Map<Freelancer>(freelancer));
             return mapper.Map<FreelancerDto>(updated);
         }
+
+        public async Task<UserDto> BecomeFreelancer(int userId, FreelancerDto freelancerDto)
+        {
+            var user = await userRepository.GetById(userId) ?? throw new Exception("User not found");
+
+            if (freelancerDto.ImageFile != null)
+            {
+                var fileName = Guid.NewGuid() + Path.GetExtension(freelancerDto.ImageFile.FileName);
+                var path = Path.Combine(Environment.CurrentDirectory, "Images/", fileName);
+                using var fs = new FileStream(path, FileMode.Create);
+                await freelancerDto.ImageFile.CopyToAsync(fs);
+
+                freelancerDto.ArrImage = Encoding.UTF8.GetBytes(fileName);
+            }
+            var freelancer = mapper.Map<Freelancer>(freelancerDto);
+
+            freelancer.UserId = userId;
+
+            var createdFreelancer = await repository.AddItem(freelancer);
+
+            user.FreelancerProfile = createdFreelancer;
+            await userRepository.UpdateItem(userId, user);
+
+            return new UserDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                FreelancerId = createdFreelancer.FreelancerId
+            };
+        }
     }
 }
+
+
+
+
+
+
+
+
+

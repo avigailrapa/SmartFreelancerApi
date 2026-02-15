@@ -6,16 +6,12 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class UserService(IRepository<User> repository, IMapper mapper) : IService<UserDto>
+    public class UserService(IRepository<User> repository, IMapper mapper) : IUserService<UserDto>
     {
         private readonly IRepository<User> repository = repository;
         private readonly IMapper mapper = mapper;
 
-        public async Task<UserDto> AddItem(UserDto user)
-        {
-            throw new NotImplementedException("Use AuthService to create users.");
 
-        }
 
         public async Task DeleteItem(int id)
         {

@@ -1,5 +1,5 @@
-﻿using System.Text;
-using Common.Dto;
+﻿using Common.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -8,14 +8,16 @@ namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class FreelancerController(IService<FreelancerDto> service, IAuthService authService) : ControllerBase
+    public class FreelancerController(IFreelancerService<FreelancerDto> service, IAuthService authService) : ControllerBase
     {
-        private readonly IService<FreelancerDto> service = service;
         private readonly IAuthService authService = authService;
+        private readonly IFreelancerService<FreelancerDto> service = service;
 
 
         // GET: api/<FreelancerController>
         [HttpGet]
+        [Authorize(Roles = "Freelancer")]
+
         public async Task<List<FreelancerDto>> Get()
         {
             return await service.GetAll();
@@ -29,24 +31,15 @@ namespace SmartFreelancerApi.Controllers
         }
 
         // POST: api/<FreelancerController>/become-freelancer/5
+
         [HttpPost("become-freelancer/{userId}")]
         public async Task<IActionResult> BecomeFreelancer(int userId, [FromForm] FreelancerDto freelancerDto)
         {
             try
             {
-                if (freelancerDto.ImageFile != null)
-                {
-                    var fileName = Guid.NewGuid() + Path.GetExtension(freelancerDto.ImageFile.FileName);
-                    var path = Path.Combine(Environment.CurrentDirectory, "Images/", fileName);
-                    using var fs = new FileStream(path, FileMode.Create);
-                    await freelancerDto.ImageFile.CopyToAsync(fs);
+                var updatedUser = await service.BecomeFreelancer(userId, freelancerDto);
+                var token = authService.GenerateToken(updatedUser, true);
 
-                    freelancerDto.ArrImage = Encoding.UTF8.GetBytes(fileName);
-                }
-
-                var updatedUser = await authService.BecomeFreelancer(userId, freelancerDto);
-
-                var token = authService.GenerateToken(updatedUser);
                 return Ok(new { Token = token, User = updatedUser });
             }
             catch (Exception ex)
@@ -54,6 +47,7 @@ namespace SmartFreelancerApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
 
 
         // PUT api/<FreelancerController>/5

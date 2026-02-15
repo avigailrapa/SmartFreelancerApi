@@ -7,9 +7,10 @@ namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class JobController(IService<JobDto> service) : ControllerBase
+    public class JobController(IJobService service) : ControllerBase
     {
-        private readonly IService<JobDto> service = service;
+        private readonly IJobService service = service;
+
 
         // GET: api/<ValuesController1>
         [HttpGet]
@@ -27,7 +28,7 @@ namespace SmartFreelancerApi.Controllers
 
         // POST api/<ValuesController1>
         [HttpPost]
-        [Authorize(Roles = "user")]
+        [Authorize(Roles = "User")]
 
         public async Task<JobDto> Post([FromBody] JobDto job)
         {
@@ -46,6 +47,13 @@ namespace SmartFreelancerApi.Controllers
         public async Task Delete(int id)
         {
             await service.DeleteItem(id);
+        }
+
+        // GET api/<ValuesController1>/open
+        [HttpGet("open")]
+        public async Task<List<JobDto>> GetOpenJobs()
+        {
+            return await service.GetOpenJobs();
         }
     }
 }
