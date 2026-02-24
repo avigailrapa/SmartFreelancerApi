@@ -10,6 +10,8 @@ namespace Service.Interfaces
         Task<List<ProposalDto>> GetProposalsByJob(int jobId);
         Task<List<ProposalDto>> GetProposalsByFreelancer(int freelancerId);
         Task<ProposalDto> GetProposalById(int proposalId);
+        Task<List<ProposalDto>> GetProposalsByUser(int userId);
+
     }
 
 

@@ -52,6 +52,12 @@ namespace Service.Services
             return mapper.Map<List<ProposalDto>>(proposal);
         }
 
+        public async Task<List<ProposalDto>> GetProposalsByUser(int userId)
+        {
+            var proposal = await repository.GetByUser(userId);
+            return mapper.Map<List<ProposalDto>>(proposal);
+        }
+
         public async Task RejectProposal(int proposalId)
         {
             var proposal = await repository.GetById(proposalId) ?? throw new Exception("Proposal not found");

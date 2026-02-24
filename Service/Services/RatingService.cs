@@ -6,16 +6,10 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class RatingService : IService<RatingDto>
+    public class RatingService(IRepository<Rating> repository, IMapper mapper) : IService<RatingDto>
     {
-        private readonly IRepository<Rating> repository;
-        private readonly IMapper mapper;
-
-        public RatingService(IRepository<Rating> repository, IMapper mapper)
-        {
-            this.mapper = mapper;
-            this.repository = repository;
-        }
+        private readonly IRepository<Rating> repository = repository;
+        private readonly IMapper mapper = mapper;
 
         public async Task<RatingDto> AddItem(RatingDto rating)
         {

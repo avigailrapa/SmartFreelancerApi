@@ -40,11 +40,19 @@ namespace Repository.Repositories
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public Task<List<Proposal>> GetByJobId(int jobId)
+        public async Task<List<Proposal>> GetByJobId(int jobId)
         {
-            return ctx.Proposals
+            return await ctx.Proposals
                 .Include(p => p.Freelancer)
                 .Where(p => p.JobId == jobId)
+                .ToListAsync();
+        }
+
+        public async Task<List<Proposal>> GetByUser(int userId)
+        {
+            return await ctx.Proposals
+                .Include(p => p.Job)
+                .Where(p => p.Job.ClientId == userId)
                 .ToListAsync();
         }
 

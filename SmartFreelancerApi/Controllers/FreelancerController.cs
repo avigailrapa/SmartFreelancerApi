@@ -1,6 +1,8 @@
 ﻿using Common.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
+using SmartFreelancerApi.Extensions;
 
 
 namespace SmartFreelancerApi.Controllers
@@ -28,13 +30,17 @@ namespace SmartFreelancerApi.Controllers
         }
 
         // POST: api/<FreelancerController>/become-freelancer/5
-
-        [HttpPost("become-freelancer/{userId}")]
-        public async Task<IActionResult> BecomeFreelancer(int userId, [FromForm] FreelancerDto freelancerDto)
+        [Authorize(Roles = "User")]
+        [HttpPost("become-freelancer")]
+        public async Task<IActionResult> BecomeFreelancer([FromForm] FreelancerDto freelancerDto)
         {
             try
             {
-                var updatedUser = await service.BecomeFreelancer(userId, freelancerDto);
+                var userId = User.GetUserId();
+                if (userId == null)
+                    return Unauthorized();
+
+                var updatedUser = await service.BecomeFreelancer(userId.Value, freelancerDto);
                 var token = authService.GenerateToken(updatedUser, true);
 
                 return Ok(new { Token = token, User = updatedUser });

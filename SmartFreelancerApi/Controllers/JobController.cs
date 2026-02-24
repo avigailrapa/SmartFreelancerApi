@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
+using SmartFreelancerApi.Extensions;
 
 namespace SmartFreelancerApi.Controllers
 {
@@ -30,9 +31,12 @@ namespace SmartFreelancerApi.Controllers
         [HttpPost]
         [Authorize(Roles = "User")]
 
-        public async Task<JobDto> Post([FromBody] JobDto job)
+        public async Task<IActionResult> Post([FromBody] JobDto job)
         {
-            return await service.AddItem(job);
+            job.ClientId = User.GetUserId() ?? throw new UnauthorizedAccessException();
+            var addedJob = await service.AddItem(job);
+
+            return Ok(addedJob);
         }
 
         // PUT api/<ValuesController1>/5

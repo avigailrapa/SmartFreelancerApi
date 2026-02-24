@@ -15,9 +15,8 @@ namespace Service.Services
         private const double MinimumMatchThreshold = 0.5;
 
 
-        private async Task<List<(JobDto, double)>> GetJobsMatchingFreelancerSkills(int freelancerId)
+        private async Task<List<(JobDto, double)>> GetJobsMatchingFreelancerSkills(Freelancer freelancer)
         {
-            var freelancer = await freelancerRepository.GetById(freelancerId) ?? throw new Exception("Freelancer not found");
             var openJobs = await jobRepository.GetOpenJobs();
 
             var freelancerMainSkills = freelancer.Skills.Select(s => s.ParentCategoryId ?? s.CategoryId).ToHashSet();
@@ -70,7 +69,7 @@ namespace Service.Services
             var freelancer = await freelancerRepository.GetById(freelancerId) ?? throw new Exception("Freelancer not found");
             var availableHours = freelancer.AvailableHours;
 
-            List<(JobDto, double)> matchingJobs = await GetJobsMatchingFreelancerSkills(freelancerId);
+            List<(JobDto, double)> matchingJobs = await GetJobsMatchingFreelancerSkills(freelancer);
             if (matchingJobs.Count == 0) return [];
 
             int n = matchingJobs.Count;

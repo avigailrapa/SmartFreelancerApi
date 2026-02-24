@@ -1,47 +1,91 @@
 ﻿using Common.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
+using SmartFreelancerApi.Extensions;
 
 
 namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProposalController(IProposalService service, IAuthService authService) : ControllerBase
+    public class ProposalController(IProposalService service) : ControllerBase
     {
-
-        private readonly IAuthService authService = authService;
         private readonly IProposalService service = service;
 
 
         // GET api/<ProposalController>/5
         [HttpGet("{id}")]
-        public async Task<ProposalDto> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
-            return await service.GetProposalById(id);
+            try
+            {
+                var proposal = await service.GetProposalById(id);
+                return Ok(proposal);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
-        // GET api/<ProposalController>/freelancer/5
-        [HttpGet("freelancer/{freelancerId}")]
-        public async Task<List<ProposalDto>> GetByFreelancer(int freelancerId)
+        // GET api/<ProposalController>/my-proposals
+        [Authorize(Roles = "Freelancer")]
+        [HttpGet("my-proposals")]
+        public async Task<IActionResult> GetMyProposals()
         {
-            return await service.GetProposalsByFreelancer(freelancerId);
+            try
+            {
+                var freelancerId = User.GetFreelancerId();
+                if (freelancerId == null)
+                    return Unauthorized();
+                var proposals = await service.GetProposalsByFreelancer(freelancerId.Value);
+                return Ok(proposals);
+
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+
         }
 
         // GET api/<ProposalController>/job/5
         [HttpGet("job/{jobId}")]
-        public async Task<List<ProposalDto>> GetByJob(int jobId)
+        public async Task<IActionResult> GetByJob(int jobId)
         {
-            return await service.GetProposalsByJob(jobId);
+            var proposals = await service.GetProposalsByJob(jobId);
+            return Ok(proposals);
+
         }
 
-        // POST api/ProposalController/send?freelancerId=5&jobId=10
+        // GET api/<ProposalController>/user/5
+        [Authorize(Roles = "User")]
+        [HttpGet("my-jobs/proposals")]
+        public async Task<IActionResult> GetAllUserProposals()
+        {
+            var userId = User.GetUserId();
+            if (userId == null)
+                return Unauthorized();
+
+            var proposals = await service.GetProposalsByUser(userId.Value);
+            return Ok(proposals);
+
+        }
+
+        // POST api/ProposalController/send
+        [Authorize(Roles = "Freelancer")]
         [HttpPost("send")]
         public async Task<IActionResult> SendProposal([FromBody] ProposalDto proposalDto)
         {
             try
             {
-                var proposal = await service.SendProposal(proposalDto.FreelancerId, proposalDto.JobId, proposalDto.Price, proposalDto.EstimatedHours, proposalDto.Message);
+                var freelancerId = User.GetFreelancerId();
+                if (freelancerId == null)
+                    return Unauthorized();
+
+                var proposal = await service.SendProposal(freelancerId.Value, proposalDto.JobId, proposalDto.Price, proposalDto.EstimatedHours, proposalDto.Message);
                 return Ok(proposal);
 
             }
@@ -70,9 +114,17 @@ namespace SmartFreelancerApi.Controllers
 
         // POST api/proposal/5/reject
         [HttpPost("{proposalId}/reject")]
-        public async Task RejectProposal(int proposalId)
+        public async Task<IActionResult> RejectProposal(int proposalId)
         {
-            await service.RejectProposal(proposalId);
+            try
+            {
+                await service.RejectProposal(proposalId);
+                return Ok(new { message = "Proposal rejected successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using Common.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
+using SmartFreelancerApi.Extensions;
 
 
 namespace SmartFreelancerApi.Controllers
@@ -11,19 +12,22 @@ namespace SmartFreelancerApi.Controllers
     {
         private readonly IMatchingService matchingService = matching;
 
-        // GET: api/MatchingController/{freelancerId}/optimal-jobs
+        // GET: api/<MatchingController>/{freelancerId}/optimal-jobs
 
-        [HttpGet("{freelancerId}/optimal-jobs")]
-        public async Task<ActionResult<List<JobDto>>> GetOptimalJobsForFreelancer(int freelancerId)
+        [HttpGet("optimal-jobs")]
+        public async Task<ActionResult<List<JobDto>>> GetOptimalJobsForFreelancer()
         {
             try
             {
-                var optimalJobs = await matchingService.GetOptimalJobsForFreelancer(freelancerId);
+                var freelancerId = User.GetFreelancerId();
+                if (freelancerId == null) return Unauthorized();
+
+                var optimalJobs = await matchingService.GetOptimalJobsForFreelancer(freelancerId.Value);
                 return Ok(optimalJobs);
             }
             catch (Exception ex)
             {
-                return NotFound(ex.Message);
+                return BadRequest(new { error = ex.Message });
             }
         }
 
