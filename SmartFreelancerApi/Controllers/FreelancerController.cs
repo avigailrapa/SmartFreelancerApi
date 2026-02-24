@@ -1,5 +1,4 @@
 ﻿using Common.Dto;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -8,16 +7,14 @@ namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class FreelancerController(IFreelancerService<FreelancerDto> service, IAuthService authService) : ControllerBase
+    public class FreelancerController(IFreelancerService service, IAuthService authService) : ControllerBase
     {
         private readonly IAuthService authService = authService;
-        private readonly IFreelancerService<FreelancerDto> service = service;
+        private readonly IFreelancerService service = service;
 
 
         // GET: api/<FreelancerController>
         [HttpGet]
-        [Authorize(Roles = "Freelancer")]
-
         public async Task<List<FreelancerDto>> Get()
         {
             return await service.GetAll();

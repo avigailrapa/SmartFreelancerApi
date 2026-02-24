@@ -36,7 +36,7 @@ namespace Repository.Repositories
              .ToListAsync();
         }
 
-        public async Task<Freelancer> GetById(int id)
+        public async Task<Freelancer?> GetById(int id)
         {
             return await ctx.Freelancers
              .Include(f => f.User)

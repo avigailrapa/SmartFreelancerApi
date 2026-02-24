@@ -33,7 +33,7 @@ namespace Repository.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Category> GetById(int id)
+        public async Task<Category?> GetById(int id)
         {
             return await ctx.Categories
                .Include(c => c.ParentCategory)

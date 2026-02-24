@@ -7,13 +7,12 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class FreelancerService(IRepository<Freelancer> repository, IMapper mapper, IRepository<User> userRepository) : IFreelancerService<FreelancerDto>
+    public class FreelancerService(IRepository<Freelancer> repository, IMapper mapper, IRepository<User> userRepository, IRepository<Category> categoryRepository) : IFreelancerService
     {
         private readonly IRepository<Freelancer> repository = repository;
         private readonly IMapper mapper = mapper;
         private readonly IRepository<User> userRepository = userRepository;
-
-
+        private readonly IRepository<Category> categoryRepository = categoryRepository;
 
         public async Task DeleteItem(int id)
         {
@@ -54,6 +53,17 @@ namespace Service.Services
 
             freelancer.UserId = userId;
 
+            if (freelancerDto.SkillIds != null)
+            {
+                freelancer.Skills = [];
+
+                foreach (var id in freelancerDto.SkillIds)
+                {
+                    var category = await categoryRepository.GetById(id);
+                    if (category != null)
+                        freelancer.Skills.Add(category);
+                }
+            }
             var createdFreelancer = await repository.AddItem(freelancer);
 
             user.FreelancerProfile = createdFreelancer;

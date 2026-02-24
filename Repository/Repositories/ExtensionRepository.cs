@@ -15,6 +15,7 @@ namespace Repository.Repositories
             services.AddScoped<IRepository<User>, UserRepository>();
 
             services.AddScoped<IJobRepository, JobRepository>();
+            services.AddScoped<IProposalRepository, ProposalRepository>();
             return services;
 
         }

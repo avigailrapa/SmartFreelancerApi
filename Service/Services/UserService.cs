@@ -6,11 +6,10 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public class UserService(IRepository<User> repository, IMapper mapper) : IUserService<UserDto>
+    public class UserService(IRepository<User> repository, IMapper mapper) : IUserService
     {
         private readonly IRepository<User> repository = repository;
         private readonly IMapper mapper = mapper;
-
 
 
         public async Task DeleteItem(int id)

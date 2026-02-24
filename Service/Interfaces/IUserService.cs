@@ -1,10 +1,12 @@
-﻿namespace Service.Interfaces
+﻿using Common.Dto;
+
+namespace Service.Interfaces
 {
-    public interface IUserService<T>
+    public interface IUserService
     {
-        Task<List<T>> GetAll();
-        Task<T> GetById(int id);
-        Task<T> UpdateItem(int id, T item);
+        Task<List<UserDto>> GetAll();
+        Task<UserDto> GetById(int id);
+        Task<UserDto> UpdateItem(int id, UserDto item);
         Task DeleteItem(int id);
     }
 }

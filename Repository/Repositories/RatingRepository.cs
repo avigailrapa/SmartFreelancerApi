@@ -33,7 +33,7 @@ namespace Repository.Repositories
               .ToListAsync();
         }
 
-        public async Task<Rating> GetById(int id)
+        public async Task<Rating?> GetById(int id)
         {
             return await ctx.Ratings
                 .Include(r => r.User)

@@ -31,16 +31,16 @@ namespace Repository.Repositories
             return await ctx.Users
                 .Include(u => u.FreelancerProfile)
                 .Include(u => u.RatingsGiven)
-                    .ThenInclude(r => r.Freelancer)
+                .ThenInclude(r => r.Freelancer)
                 .ToListAsync();
         }
 
-        public async Task<User> GetById(int id)
+        public async Task<User?> GetById(int id)
         {
             return await ctx.Users
                 .Include(u => u.FreelancerProfile)
                 .Include(u => u.RatingsGiven)
-                    .ThenInclude(r => r.Freelancer)
+                .ThenInclude(r => r.Freelancer)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 

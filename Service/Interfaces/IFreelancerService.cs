@@ -2,11 +2,11 @@
 
 namespace Service.Interfaces
 {
-    public interface IFreelancerService<T>
+    public interface IFreelancerService
     {
-        Task<List<T>> GetAll();
-        Task<T> GetById(int id);
-        Task<T> UpdateItem(int id, T item);
+        Task<List<FreelancerDto>> GetAll();
+        Task<FreelancerDto> GetById(int id);
+        Task<FreelancerDto> UpdateItem(int id, FreelancerDto item);
         Task DeleteItem(int id);
         Task<UserDto> BecomeFreelancer(int userId, FreelancerDto freelancerDto);
 

@@ -20,11 +20,27 @@ namespace Service.Services
             var freelancer = await freelancerRepository.GetById(freelancerId) ?? throw new Exception("Freelancer not found");
             var openJobs = await jobRepository.GetOpenJobs();
 
+            var freelancerMainSkills = freelancer.Skills.Select(s => s.ParentCategoryId ?? s.CategoryId).ToHashSet();
+
+            var freelancerSubSkill = new HashSet<string>(
+                freelancer.Skills.Where(s => s.ParentCategoryId != null).Select(s => s.Name),
+                StringComparer.OrdinalIgnoreCase
+                );
+
+
+            var filteredJobs = openJobs.Where(job =>
+            {
+                return job.RequiredSkills
+                 .Select(s => s.ParentCategoryId ?? s.CategoryId)
+                 .Any(j => freelancerMainSkills.Contains(j));
+            });
+
+
             var matchingJobs = new List<(JobDto Job, double Value)>();
 
-            foreach (var job in openJobs)
+            foreach (var job in filteredJobs)
             {
-                if (IsSkillMatch(freelancer, job))
+                if (IsSkillMatch(job, freelancerSubSkill))
                 {
                     double value = job.RequiredHours * job.MaxPayPerHour;
                     JobDto jobDto = mapper.Map<JobDto>(job);
@@ -35,13 +51,14 @@ namespace Service.Services
             return [.. matchingJobs.OrderByDescending(j => j.Value)]; ;
         }
 
-        private static bool IsSkillMatch(Freelancer freelancer, Job job)
+        private static bool IsSkillMatch(Job job, HashSet<string> freelancerSubSkills)
         {
-            if (job.RequiredSkills == null || job.RequiredSkills.Count == 0) return true;
+            var jobSubSkills = job.RequiredSkills.Where(s => s.ParentCategoryId != null).ToList();
 
-            var freelancerSkillSet = new HashSet<string>(freelancer.Skills?.Select(s => s.Name) ?? [], StringComparer.OrdinalIgnoreCase);
-            int matchedSkills = job.RequiredSkills.Count(skill => freelancerSkillSet.Contains(skill.Name));
-            double matchPercentage = (double)matchedSkills / job.RequiredSkills.Count;
+            if (jobSubSkills.Count == 0) return true;
+
+            int matchedSkills = jobSubSkills.Count(skill => freelancerSubSkills.Contains(skill.Name));
+            double matchPercentage = (double)matchedSkills / jobSubSkills.Count;
 
             return matchPercentage >= MinimumMatchThreshold;
         }

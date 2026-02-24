@@ -7,9 +7,9 @@ namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController(IService<UserDto> service, IConfiguration configuration) : ControllerBase
+    public class UserController(IUserService service) : ControllerBase
     {
-        private readonly IService<UserDto> service = service;
+        private readonly IUserService service = service;
 
         // GET: api/<UserController>
         [HttpGet]

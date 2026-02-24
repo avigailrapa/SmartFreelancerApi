@@ -44,13 +44,18 @@ namespace FreelancersApi.DataContext
                 entity.HasOne(p => p.Job)
                     .WithMany(j => j.Proposals)
                     .HasForeignKey(p => p.JobId)
-                    .OnDelete(DeleteBehavior.Restrict); // פתרון בעיית המעגליות
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(p => p.Freelancer)
                     .WithMany(f => f.ProposalsSubmitted)
                     .HasForeignKey(p => p.FreelancerId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
+
+            modelBuilder.Entity<Freelancer>()
+               .HasMany(f => f.Skills)
+               .WithMany(c => c.Freelancers)
+               .UsingEntity(j => j.ToTable("FreelancerSkills"));
         }
 
         public async Task Save()

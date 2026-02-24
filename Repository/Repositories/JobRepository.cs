@@ -36,7 +36,7 @@ namespace Repository.Repositories
               .ToListAsync();
         }
 
-        public async Task<Job> GetById(int id)
+        public async Task<Job?> GetById(int id)
         {
             return await ctx.Jobs
                .Include(j => j.Client)
