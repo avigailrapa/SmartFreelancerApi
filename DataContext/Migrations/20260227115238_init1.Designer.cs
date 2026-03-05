@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataContext.Migrations
 {
     [DbContext(typeof(FreelancerContext))]
-    [Migration("20260208122518_init")]
-    partial class init
+    [Migration("20260227115238_init1")]
+    partial class init1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,19 +25,34 @@ namespace DataContext.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CategoryFreelancer", b =>
+                {
+                    b.Property<int>("FreelancersFreelancerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SkillsCategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FreelancersFreelancerId", "SkillsCategoryId");
+
+                    b.HasIndex("SkillsCategoryId");
+
+                    b.ToTable("FreelancerSkills", (string)null);
+                });
+
             modelBuilder.Entity("CategoryJob", b =>
                 {
-                    b.Property<int>("JobsJobId")
+                    b.Property<int>("JobId")
                         .HasColumnType("int");
 
                     b.Property<int>("RequiredSkillsCategoryId")
                         .HasColumnType("int");
 
-                    b.HasKey("JobsJobId", "RequiredSkillsCategoryId");
+                    b.HasKey("JobId", "RequiredSkillsCategoryId");
 
                     b.HasIndex("RequiredSkillsCategoryId");
 
-                    b.ToTable("CategoryJob");
+                    b.ToTable("JobRequiredSkills", (string)null);
                 });
 
             modelBuilder.Entity("Repository.Entities.Category", b =>
@@ -48,9 +63,6 @@ namespace DataContext.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
 
-                    b.Property<int?>("FreelancerId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -58,9 +70,10 @@ namespace DataContext.Migrations
                     b.Property<int?>("ParentCategoryId")
                         .HasColumnType("int");
 
-                    b.HasKey("CategoryId");
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
-                    b.HasIndex("FreelancerId");
+                    b.HasKey("CategoryId");
 
                     b.HasIndex("ParentCategoryId");
 
@@ -85,12 +98,15 @@ namespace DataContext.Migrations
                     b.Property<int>("ExperienceLevel")
                         .HasColumnType("int");
 
-                    b.Property<int>("HourlyRate")
-                        .HasColumnType("int");
+                    b.Property<decimal>("HourlyRate")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Image")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MainCategoryId")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -99,6 +115,8 @@ namespace DataContext.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("FreelancerId");
+
+                    b.HasIndex("MainCategoryId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -127,8 +145,11 @@ namespace DataContext.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MaxPayPerHour")
+                    b.Property<int>("MainCategoryId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("MaxPayPerHour")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("RequiredHours")
                         .HasColumnType("int");
@@ -145,6 +166,8 @@ namespace DataContext.Migrations
                     b.HasIndex("AssignedFreelancerId");
 
                     b.HasIndex("ClientId");
+
+                    b.HasIndex("MainCategoryId");
 
                     b.ToTable("Jobs");
                 });
@@ -166,15 +189,15 @@ namespace DataContext.Migrations
                     b.Property<int>("FreelancerId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("HourlyRate")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("JobId")
                         .HasColumnType("int");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Price")
-                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -246,11 +269,26 @@ namespace DataContext.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("CategoryFreelancer", b =>
+                {
+                    b.HasOne("Repository.Entities.Freelancer", null)
+                        .WithMany()
+                        .HasForeignKey("FreelancersFreelancerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Repository.Entities.Category", null)
+                        .WithMany()
+                        .HasForeignKey("SkillsCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CategoryJob", b =>
                 {
                     b.HasOne("Repository.Entities.Job", null)
                         .WithMany()
-                        .HasForeignKey("JobsJobId")
+                        .HasForeignKey("JobId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -263,24 +301,29 @@ namespace DataContext.Migrations
 
             modelBuilder.Entity("Repository.Entities.Category", b =>
                 {
-                    b.HasOne("Repository.Entities.Freelancer", null)
-                        .WithMany("Skills")
-                        .HasForeignKey("FreelancerId");
-
                     b.HasOne("Repository.Entities.Category", "ParentCategory")
-                        .WithMany()
-                        .HasForeignKey("ParentCategoryId");
+                        .WithMany("SubCategories")
+                        .HasForeignKey("ParentCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
                 });
 
             modelBuilder.Entity("Repository.Entities.Freelancer", b =>
                 {
+                    b.HasOne("Repository.Entities.Category", "MainCategory")
+                        .WithMany()
+                        .HasForeignKey("MainCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Repository.Entities.User", "User")
                         .WithOne("FreelancerProfile")
                         .HasForeignKey("Repository.Entities.Freelancer", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("MainCategory");
 
                     b.Navigation("User");
                 });
@@ -297,9 +340,17 @@ namespace DataContext.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Repository.Entities.Category", "MainCategory")
+                        .WithMany("Jobs")
+                        .HasForeignKey("MainCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("AssignedFreelancer");
 
                     b.Navigation("Client");
+
+                    b.Navigation("MainCategory");
                 });
 
             modelBuilder.Entity("Repository.Entities.Proposal", b =>
@@ -339,6 +390,13 @@ namespace DataContext.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Repository.Entities.Category", b =>
+                {
+                    b.Navigation("Jobs");
+
+                    b.Navigation("SubCategories");
+                });
+
             modelBuilder.Entity("Repository.Entities.Freelancer", b =>
                 {
                     b.Navigation("JobsInProgress");
@@ -346,8 +404,6 @@ namespace DataContext.Migrations
                     b.Navigation("ProposalsSubmitted");
 
                     b.Navigation("RatingsReceived");
-
-                    b.Navigation("Skills");
                 });
 
             modelBuilder.Entity("Repository.Entities.Job", b =>
