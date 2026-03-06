@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Common.Dto;
+using Common.Enums;
+using Common.Exceptions;
 using Repository.Entities;
 using Repository.interfaces;
 using Repository.Interfaces;
@@ -15,66 +17,75 @@ namespace Service.Services
         private const double MinimumMatchThreshold = 0.5;
 
 
-        private async Task<List<(JobDto, double)>> GetJobsMatchingFreelancerSkills(Freelancer freelancer)
+        private async Task<List<(JobDto, decimal)>> GetJobsMatchingFreelancerSkills(Freelancer freelancer)
         {
             var openJobs = await jobRepository.GetOpenJobs();
+            var filteredJobs = openJobs.Where(job => job.MainCategoryId == freelancer.MainCategoryId);
 
-            var freelancerMainSkills = freelancer.Skills.Select(s => s.ParentCategoryId ?? s.CategoryId).ToHashSet();
+            var freelancerSkillIds = freelancer.Skills
+                .Select(s => s.CategoryId)
+                .ToHashSet();
 
-            var freelancerSubSkill = new HashSet<string>(
-                freelancer.Skills.Where(s => s.ParentCategoryId != null).Select(s => s.Name),
-                StringComparer.OrdinalIgnoreCase
-                );
-
-
-            var filteredJobs = openJobs.Where(job =>
-            {
-                return job.RequiredSkills
-                 .Select(s => s.ParentCategoryId ?? s.CategoryId)
-                 .Any(j => freelancerMainSkills.Contains(j));
-            });
+            var freelancerSpecialty = freelancer.Skills
+                .Where(s => s.ParentCategoryId.HasValue)
+                .Select(s => s.ParentCategoryId!.Value)
+                .ToHashSet();
 
 
-            var matchingJobs = new List<(JobDto Job, double Value)>();
+            var matchingJobs = new List<(JobDto Job, decimal Value)>();
 
             foreach (var job in filteredJobs)
             {
-                if (IsSkillMatch(job, freelancerSubSkill))
+                if (IsSkillMatch(job, freelancerSkillIds, freelancerSpecialty))
                 {
-                    double value = job.RequiredHours * job.MaxPayPerHour;
-                    JobDto jobDto = mapper.Map<JobDto>(job);
-                    matchingJobs.Add((jobDto, value));
-
+                    decimal value = job.RequiredHours * job.MaxPayPerHour;
+                    matchingJobs.Add((mapper.Map<JobDto>(job), value));
                 }
             }
-            return [.. matchingJobs.OrderByDescending(j => j.Value)]; ;
+            return [.. matchingJobs.OrderByDescending(j => j.Value)];
         }
 
-        private static bool IsSkillMatch(Job job, HashSet<string> freelancerSubSkills)
+
+        private static bool IsSkillMatch(Job job, HashSet<int> freelancerSkillIds, HashSet<int> freelancerSpecialtyIds)
         {
-            var jobSubSkills = job.RequiredSkills.Where(s => s.ParentCategoryId != null).ToList();
+            var jobRequiredSkills = job.RequiredSkills
+                .Where(s => s.Type == CategoryType.Skill)
+                .ToList();
 
-            if (jobSubSkills.Count == 0) return true;
+            if (jobRequiredSkills.Count == 0) return true;
 
-            int matchedSkills = jobSubSkills.Count(skill => freelancerSubSkills.Contains(skill.Name));
-            double matchPercentage = (double)matchedSkills / jobSubSkills.Count;
+            var jobSpecialtyIds = jobRequiredSkills
+                .Select(s => s.ParentCategoryId)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .ToHashSet();
 
-            return matchPercentage >= MinimumMatchThreshold;
+            bool specialtyMatched = jobSpecialtyIds.Any(id => freelancerSpecialtyIds.Contains(id));
+            double specialtyScore = specialtyMatched ? 1.0 : 0.0;
+
+            int matchedSkillsCount = jobRequiredSkills.Count(s => freelancerSkillIds.Contains(s.CategoryId));
+            double skillsScore = (double)matchedSkillsCount / jobRequiredSkills.Count;
+
+            double totalMatch = (specialtyScore * 0.4) + (skillsScore * 0.6);
+
+            return totalMatch >= MinimumMatchThreshold;
         }
+
 
 
 
         public async Task<List<JobDto>> GetOptimalJobsForFreelancer(int freelancerId)
         {
-            var freelancer = await freelancerRepository.GetById(freelancerId) ?? throw new Exception("Freelancer not found");
+            var freelancer = await freelancerRepository.GetById(freelancerId) ?? throw new NotFoundException("Freelancer not found");
+
             var availableHours = freelancer.AvailableHours;
 
-            List<(JobDto, double)> matchingJobs = await GetJobsMatchingFreelancerSkills(freelancer);
+            List<(JobDto, decimal)> matchingJobs = await GetJobsMatchingFreelancerSkills(freelancer);
             if (matchingJobs.Count == 0) return [];
 
             int n = matchingJobs.Count;
 
-            double[,] dp = new double[n + 1, availableHours + 1];
+            decimal[,] dp = new decimal[n + 1, availableHours + 1];
             for (int i = 1; i <= n; i++)
             {
                 var (job, value) = matchingJobs[i - 1];
@@ -97,7 +108,7 @@ namespace Service.Services
             return optimalJobs;
         }
 
-        private static List<JobDto> ReconstructOptimalJobs(double[,] dp, List<(JobDto job, double value)> matchingJobs, int availableHours)
+        private static List<JobDto> ReconstructOptimalJobs(decimal[,] dp, List<(JobDto job, decimal value)> matchingJobs, int availableHours)
         {
             List<JobDto> optimalJobs = [];
             int n = matchingJobs.Count;

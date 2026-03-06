@@ -1,4 +1,5 @@
 ﻿using Common.Dto;
+using Common.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
@@ -17,54 +18,37 @@ namespace SmartFreelancerApi.Controllers
 
         // GET: api/<FreelancerController>
         [HttpGet]
-        public async Task<List<FreelancerDto>> Get()
-        {
-            return await service.GetAll();
-        }
+        public async Task<List<FreelancerDto>> Get() => await service.GetAll();
+
 
         // GET api/<FreelancerController>/5
         [HttpGet("{id}")]
-        public async Task<FreelancerDto> Get(int id)
-        {
-            return await service.GetById(id);
-        }
+        public async Task<FreelancerDto> Get(int id) => await service.GetById(id);
+
 
         // POST: api/<FreelancerController>/become-freelancer/5
         [Authorize(Roles = "User")]
         [HttpPost("become-freelancer")]
         public async Task<IActionResult> BecomeFreelancer([FromForm] FreelancerDto freelancerDto)
         {
-            try
-            {
-                var userId = User.GetUserId();
-                if (userId == null)
-                    return Unauthorized();
+            var userId = User.GetUserId() ?? throw new UnauthorizedException("User is not logged in");
 
-                var updatedUser = await service.BecomeFreelancer(userId.Value, freelancerDto);
-                var token = authService.GenerateToken(updatedUser, true);
+            var updatedUser = await service.BecomeFreelancer(userId, freelancerDto);
+            var token = authService.GenerateToken(updatedUser, true);
 
-                return Ok(new { Token = token, User = updatedUser });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(new { Token = token, User = updatedUser });
         }
 
 
 
         // PUT api/<FreelancerController>/5
         [HttpPut("{id}")]
-        public async Task<FreelancerDto> Put(int id, [FromBody] FreelancerDto freelancer)
-        {
-            return await service.UpdateItem(id, freelancer);
-        }
+        public async Task<FreelancerDto> Put(int id, [FromBody] FreelancerDto freelancer) => await service.UpdateItem(id, freelancer);
 
         // DELETE api/<FreelancerController>/5
         [HttpDelete("{id}")]
-        public async Task Delete(int id)
-        {
-            await service.DeleteItem(id);
-        }
+        public async Task Delete(int id) => await service.DeleteItem(id);
+
+
     }
 }

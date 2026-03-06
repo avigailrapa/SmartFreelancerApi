@@ -74,7 +74,7 @@ namespace Repository.Repositories
             var p = await ctx.Proposals.FirstOrDefaultAsync(p => p.Id == id);
             if (p != null)
             {
-                p.Price = proposal.Price;
+                p.HourlyRate = proposal.HourlyRate;
                 p.EstimatedHours = proposal.EstimatedHours;
                 p.Message = proposal.Message;
                 p.Status = proposal.Status;

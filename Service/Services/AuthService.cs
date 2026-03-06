@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using AutoMapper;
 using Common.Dto;
+using Common.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Repository.Entities;
@@ -12,17 +13,17 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    internal class AuthService(IRepository<User> userRepository, IRepository<Freelancer> freelancerRepository, IMapper mapper, IConfiguration configuration) : IAuthService
+    internal class AuthService(IRepository<User> userRepository, IMapper mapper, IConfiguration configuration) : IAuthService
     {
         private readonly IRepository<User> userRepository = userRepository;
-        private readonly IRepository<Freelancer> freelancerRepository = freelancerRepository;
         private readonly IMapper mapper = mapper;
         private readonly IConfiguration configuration = configuration;
 
         public async Task<UserDto> Login(LoginDto login)
         {
             var users = await userRepository.GetAll();
-            var user = users.FirstOrDefault(users => users.FullName == login.UserName && users.Password == login.Password) ?? throw new Exception("Invalid username or password");
+            var user = users.FirstOrDefault(users => users.FullName == login.UserName && users.Password == login.Password) ?? throw new UnauthorizedException("Invalid username or password");
+
 
             return new UserDto
             {
@@ -38,7 +39,7 @@ namespace Service.Services
             var existingUser = (await userRepository.GetAll())
                 .FirstOrDefault(u => u.FullName == user.FullName && u.Email == user.Email);
             if (existingUser != null)
-                throw new Exception("User already exists");
+                throw new BadRequestException("User already exists");
 
             var createdUser = await userRepository.AddItem(mapper.Map<User>(user));
 

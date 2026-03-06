@@ -29,16 +29,18 @@ namespace Repository.Repositories
         {
             return await ctx.Categories
                 .Include(c => c.ParentCategory)
-                .Include(c => c.Jobs)
+                .Include(c => c.SubCategories)
+                .ThenInclude(s => s.SubCategories)
                 .ToListAsync();
         }
 
         public async Task<Category?> GetById(int id)
         {
             return await ctx.Categories
-               .Include(c => c.ParentCategory)
-               .Include(c => c.Jobs)
-               .FirstOrDefaultAsync(c => c.CategoryId == id);
+                .Include(c => c.ParentCategory)
+                .Include(c => c.SubCategories)
+                .Include(c => c.Jobs)
+                .FirstOrDefaultAsync(c => c.CategoryId == id);
         }
 
         public async Task<Category> UpdateItem(int id, Category category)

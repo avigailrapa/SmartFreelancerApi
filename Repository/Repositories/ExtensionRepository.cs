@@ -11,7 +11,7 @@ namespace Repository.Repositories
         {
             services.AddScoped<IRepository<Category>, CategoryRepository>();
             services.AddScoped<IRepository<Freelancer>, FreelancerRepository>();
-            services.AddScoped<IRepository<Rating>, RatingRepository>();
+            services.AddScoped<RatingRepository>();
             services.AddScoped<IRepository<User>, UserRepository>();
 
             services.AddScoped<IJobRepository, JobRepository>();

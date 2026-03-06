@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Common.Dto;
+using Common.Exceptions;
 using Repository.Entities;
 using Repository.interfaces;
 using Service.Interfaces;
@@ -19,23 +20,28 @@ namespace Service.Services
 
         public async Task DeleteItem(int id)
         {
+            var exist = await repository.GetById(id) ?? throw new NotFoundException("Category not found");
             await repository.DeleteItem(id);
         }
 
         public async Task<List<CategoryDto>> GetAll()
         {
             var categories = await repository.GetAll();
-            return mapper.Map<List<CategoryDto>>(categories);
+
+            var rootCategories = categories.Where(c => c.ParentCategoryId == null).ToList();
+
+            return mapper.Map<List<CategoryDto>>(rootCategories);
         }
 
         public async Task<CategoryDto> GetById(int id)
         {
-            var category = await repository.GetById(id);
+            var category = await repository.GetById(id) ?? throw new NotFoundException("Category not found");
             return mapper.Map<CategoryDto>(category);
         }
 
         public async Task<CategoryDto> UpdateItem(int id, CategoryDto category)
         {
+            var exist = await repository.GetById(id) ?? throw new NotFoundException("Category not found");
             var updated = await repository.UpdateItem(id, mapper.Map<Category>(category));
             return mapper.Map<CategoryDto>(updated);
         }

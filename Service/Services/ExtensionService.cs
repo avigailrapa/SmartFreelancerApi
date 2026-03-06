@@ -12,7 +12,7 @@ namespace Service.Services
             services.AddRepository();
 
             services.AddScoped<IService<CategoryDto>, CategoryService>();
-            services.AddScoped<IService<RatingDto>, RatingService>();
+            services.AddScoped<RatingRepository>();
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IFreelancerService, FreelancerService>();

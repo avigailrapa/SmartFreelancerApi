@@ -16,6 +16,8 @@ namespace Common.Dto
         public string Bio { get; set; }
         public int AvailableHours { get; set; }
         public int HourlyRate { get; set; }
+        public double AverageStars { get; set; }
+
         public ExperienceLevel ExperienceLevel { get; set; }
         public FreelancerStatus Status { get; set; }
         public ICollection<int>? SkillIds { get; set; } = [];

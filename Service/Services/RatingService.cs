@@ -1,43 +1,31 @@
 ﻿using AutoMapper;
 using Common.Dto;
 using Repository.Entities;
-using Repository.interfaces;
-using Service.Interfaces;
+using Repository.Repositories;
 
 namespace Service.Services
 {
-    public class RatingService(IRepository<Rating> repository, IMapper mapper) : IService<RatingDto>
+    public class RatingService(RatingRepository repository, IMapper mapper)
     {
-        private readonly IRepository<Rating> repository = repository;
+        private readonly RatingRepository repository = repository;
         private readonly IMapper mapper = mapper;
 
-        public async Task<RatingDto> AddItem(RatingDto rating)
+        public async Task<RatingDto> AddRating(RatingDto ratingDto)
         {
-            var entity = await repository.AddItem(mapper.Map<Rating>(rating));
-            return mapper.Map<RatingDto>(entity);
+            var rating = new Rating
+            {
+                FreelancerId = ratingDto.FreelancerId,
+                UserId = ratingDto.UserId,
+                Stars = ratingDto.Stars,
+                Comment = ratingDto.Comment,
+                CreatedAt = DateTime.Now
+            };
+
+            var added = await repository.AddItem(rating);
+
+            return mapper.Map<RatingDto>(added);
         }
 
-        public async Task DeleteItem(int id)
-        {
-            await repository.DeleteItem(id);
-        }
 
-        public async Task<List<RatingDto>> GetAll()
-        {
-            var ratings = await repository.GetAll();
-            return mapper.Map<List<RatingDto>>(ratings);
-        }
-
-        public async Task<RatingDto> GetById(int id)
-        {
-            var rating = await repository.GetById(id);
-            return mapper.Map<RatingDto>(rating);
-        }
-
-        public async Task<RatingDto> UpdateItem(int id, RatingDto rating)
-        {
-            var updated = await repository.UpdateItem(id, mapper.Map<Rating>(rating));
-            return mapper.Map<RatingDto>(updated);
-        }
     }
 }

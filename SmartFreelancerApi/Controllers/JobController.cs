@@ -15,49 +15,36 @@ namespace SmartFreelancerApi.Controllers
 
         // GET: api/<ValuesController1>
         [HttpGet]
-        public async Task<List<JobDto>> Get()
-        {
-            return await service.GetAll();
-        }
+        public async Task<List<JobDto>> Get() => await service.GetAll();
 
         // GET api/<ValuesController1>/5
         [HttpGet("{id}")]
-        public async Task<JobDto> Get(int id)
-        {
-            return await service.GetById(id);
-        }
+        public async Task<JobDto> Get(int id) => await service.GetById(id);
+
 
         // POST api/<ValuesController1>
         [HttpPost]
         [Authorize(Roles = "User")]
 
-        public async Task<IActionResult> Post([FromBody] JobDto job)
+        public async Task<JobDto> Post([FromBody] JobDto job)
         {
             job.ClientId = User.GetUserId() ?? throw new UnauthorizedAccessException();
-            var addedJob = await service.AddItem(job);
+            return await service.AddItem(job);
 
-            return Ok(addedJob);
         }
 
         // PUT api/<ValuesController1>/5
         [HttpPut("{id}")]
-        public async Task<JobDto> Put(int id, [FromBody] JobDto job)
-        {
-            return await service.UpdateItem(id, job);
-        }
+        public async Task<JobDto> Put(int id, [FromBody] JobDto job) => await service.UpdateItem(id, job);
 
         // DELETE api/<ValuesController1>/5
         [HttpDelete("{id}")]
-        public async Task Delete(int id)
-        {
-            await service.DeleteItem(id);
-        }
+        public async Task Delete(int id) => await service.DeleteItem(id);
+
 
         // GET api/<ValuesController1>/open
         [HttpGet("open")]
-        public async Task<List<JobDto>> GetOpenJobs()
-        {
-            return await service.GetOpenJobs();
-        }
+        public async Task<List<JobDto>> GetOpenJobs() => await service.GetOpenJobs();
+
     }
 }

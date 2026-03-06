@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Repository.interfaces;
 using Service.Services;
+using SmartFreelancerApi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,7 +68,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         });
 var connection = builder.Configuration.GetConnectionString("database-home");
 
-builder.Services.AddSingleton<IContext>(new FreelancerContext(connection));
+builder.Services.AddSingleton<IContext>(new FreelancerContext());
 
 
 builder.Services.AddAutoMapper(cfg =>
@@ -81,6 +82,7 @@ builder.Services.AddServices();
 
 
 var app = builder.Build();
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 // Swagger
 if (app.Environment.IsDevelopment())

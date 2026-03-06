@@ -1,49 +1,28 @@
 ﻿using Common.Dto;
+using Common.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Service.Interfaces;
+using Service.Services;
+using SmartFreelancerApi.Extensions;
 
 
 namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RatingController(IService<RatingDto> service) : ControllerBase
+    public class RatingController(RatingService service) : ControllerBase
     {
-        private readonly IService<RatingDto> service = service;
-
-        // GET: api/<RatingController>
-        [HttpGet]
-        public async Task<List<RatingDto>> Get()
-        {
-            return await service.GetAll();
-        }
-
-        // GET api/<RatingController>/5
-        [HttpGet("{id}")]
-        public async Task<RatingDto> Get(int id)
-        {
-            return await service.GetById(id);
-        }
+        private readonly RatingService service = service;
 
         // POST api/<RatingController>
+        [Authorize(Roles = "User")]
+
         [HttpPost]
         public async Task<RatingDto> Post([FromBody] RatingDto rating)
         {
-            return await service.AddItem(rating);
-        }
-
-        // PUT api/<RatingController>/5
-        [HttpPut("{id}")]
-        public async Task<RatingDto> Put(int id, [FromBody] RatingDto rating)
-        {
-            return await service.UpdateItem(id, rating);
-        }
-
-        // DELETE api/<RatingController>/5
-        [HttpDelete("{id}")]
-        public async Task Delete(int id)
-        {
-            await service.DeleteItem(id);
+            rating.UserId = User.GetUserId() ?? throw new UnauthorizedException("User is not logged in");
+            return await service.AddRating(rating);
         }
     }
+
 }

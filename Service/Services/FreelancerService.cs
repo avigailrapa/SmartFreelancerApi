@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using AutoMapper;
 using Common.Dto;
+using Common.Exceptions;
 using Repository.Entities;
 using Repository.interfaces;
 using Service.Interfaces;
@@ -16,6 +17,7 @@ namespace Service.Services
 
         public async Task DeleteItem(int id)
         {
+            var freelancer = await repository.GetById(id) ?? throw new NotFoundException("Freelancer not found");
             await repository.DeleteItem(id);
         }
         public async Task<List<FreelancerDto>> GetAll()
@@ -26,19 +28,20 @@ namespace Service.Services
 
         public async Task<FreelancerDto> GetById(int id)
         {
-            var freelancer = await repository.GetById(id);
+            var freelancer = await repository.GetById(id) ?? throw new NotFoundException("Freelancer not found");
             return mapper.Map<FreelancerDto>(freelancer);
         }
 
         public async Task<FreelancerDto> UpdateItem(int id, FreelancerDto freelancer)
         {
+            var exists = await repository.GetById(id) ?? throw new NotFoundException("Freelancer not found");
             var updated = await repository.UpdateItem(id, mapper.Map<Freelancer>(freelancer));
             return mapper.Map<FreelancerDto>(updated);
         }
 
         public async Task<UserDto> BecomeFreelancer(int userId, FreelancerDto freelancerDto)
         {
-            var user = await userRepository.GetById(userId) ?? throw new Exception("User not found");
+            var user = await userRepository.GetById(userId) ?? throw new NotFoundException("User not found");
 
             if (freelancerDto.ImageFile != null)
             {
@@ -59,9 +62,8 @@ namespace Service.Services
 
                 foreach (var id in freelancerDto.SkillIds)
                 {
-                    var category = await categoryRepository.GetById(id);
-                    if (category != null)
-                        freelancer.Skills.Add(category);
+                    var category = await categoryRepository.GetById(id) ?? throw new BadRequestException($"Category with id {id} not found");
+                    freelancer.Skills.Add(category);
                 }
             }
             var createdFreelancer = await repository.AddItem(freelancer);

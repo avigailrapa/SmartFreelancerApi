@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Common.Dto;
+using Common.Exceptions;
 using Repository.Entities;
 using Repository.Interfaces;
 using Service.Interfaces;
@@ -19,6 +20,7 @@ namespace Service.Services
 
         public async Task DeleteItem(int id)
         {
+            var exists = await repository.GetById(id) ?? throw new KeyNotFoundException("Job not found");
             await repository.DeleteItem(id);
         }
 
@@ -36,12 +38,14 @@ namespace Service.Services
 
         public async Task<JobDto> GetById(int id)
         {
-            var job = await repository.GetById(id);
+            var job = await repository.GetById(id) ?? throw new NotFoundException("Job not found");
+
             return mapper.Map<JobDto>(job);
         }
 
         public async Task<JobDto> UpdateItem(int id, JobDto job)
         {
+            var exists = await repository.GetById(id) ?? throw new KeyNotFoundException("Job not found");
             var updated = await repository.UpdateItem(id, mapper.Map<Job>(job));
             return mapper.Map<JobDto>(updated);
         }

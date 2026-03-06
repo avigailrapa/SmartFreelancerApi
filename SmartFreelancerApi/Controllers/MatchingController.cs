@@ -1,4 +1,5 @@
 ﻿using Common.Dto;
+using Common.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 using SmartFreelancerApi.Extensions;
@@ -17,18 +18,8 @@ namespace SmartFreelancerApi.Controllers
         [HttpGet("optimal-jobs")]
         public async Task<ActionResult<List<JobDto>>> GetOptimalJobsForFreelancer()
         {
-            try
-            {
-                var freelancerId = User.GetFreelancerId();
-                if (freelancerId == null) return Unauthorized();
-
-                var optimalJobs = await matchingService.GetOptimalJobsForFreelancer(freelancerId.Value);
-                return Ok(optimalJobs);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            var freelancerId = User.GetFreelancerId() ?? throw new UnauthorizedException("User is not logged in");
+            return await matchingService.GetOptimalJobsForFreelancer(freelancerId);
         }
 
     }

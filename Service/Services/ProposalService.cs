@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Common.Dto;
 using Common.Enums;
+using Common.Exceptions;
 using Repository.Entities;
 using Repository.Interfaces;
 using Service.Interfaces;
@@ -14,10 +15,11 @@ namespace Service.Services
 
         public async Task<ProposalDto> ApproveProposal(int proposalId)
         {
-            var proposal = await repository.GetById(proposalId) ?? throw new Exception("Proposal not found");
+            var proposal = await repository.GetById(proposalId) ?? throw new NotFoundException("Proposal not found");
+
 
             if (proposal.Status != ProposalStatus.Pending)
-                throw new Exception("Proposal cannot be approved");
+                throw new ConflictException("Proposal cannot be approved");
 
             proposal.Status = ProposalStatus.Accepted;
 
@@ -35,7 +37,8 @@ namespace Service.Services
 
         public async Task<ProposalDto> GetProposalById(int proposalId)
         {
-            var proposal = await repository.GetById(proposalId) ?? throw new Exception("Proposal not found");
+            var proposal = await repository.GetById(proposalId) ?? throw new NotFoundException("Proposal not found");
+
             return mapper.Map<ProposalDto>(proposal);
         }
 
@@ -60,27 +63,28 @@ namespace Service.Services
 
         public async Task RejectProposal(int proposalId)
         {
-            var proposal = await repository.GetById(proposalId) ?? throw new Exception("Proposal not found");
+            var proposal = await repository.GetById(proposalId) ?? throw new NotFoundException("Proposal not found");
+
 
             if (proposal.Status == ProposalStatus.Accepted)
-                throw new Exception("Accepted proposal cannot be rejected");
+                throw new ConflictException("Accepted proposal cannot be rejected");
 
             proposal.Status = ProposalStatus.Rejected;
             await repository.Update(proposalId, proposal);
 
         }
 
-        public async Task<ProposalDto> SendProposal(int freelancerId, int jobId, int price, int hours, string message)
+        public async Task<ProposalDto> SendProposal(int freelancerId, int jobId, decimal price, int hours, string message)
         {
             if (await repository.Exists(freelancerId, jobId))
-                throw new Exception("Proposal already exists for this job");
+                throw new ConflictException("Proposal already exists for this job");
 
 
             var proposal = new Proposal
             {
                 FreelancerId = freelancerId,
                 JobId = jobId,
-                Price = price,
+                HourlyRate = price,
                 EstimatedHours = hours,
                 Message = message,
                 Status = ProposalStatus.Pending,
@@ -90,5 +94,7 @@ namespace Service.Services
             return mapper.Map<ProposalDto>(proposal);
 
         }
+
+
     }
 }
