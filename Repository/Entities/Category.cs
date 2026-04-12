@@ -11,7 +11,8 @@ namespace Repository.Entities
         public Category? ParentCategory { get; set; }
         public ICollection<Category> SubCategories { get; set; } = [];
         public ICollection<Job> Jobs { get; set; } = [];
-        public ICollection<Freelancer> Freelancers { get; set; } = [];
+        public ICollection<Freelancer> SkillFreelancers { get; set; } = [];
+        public ICollection<Freelancer> SpecializationFreelancers { get; set; } = [];
 
     }
 }

@@ -52,7 +52,6 @@ namespace Repository.Repositories
             {
                 u.FullName = user.FullName;
                 u.Email = user.Email;
-                u.Password = user.Password;
                 await ctx.Save();
             }
             return u;

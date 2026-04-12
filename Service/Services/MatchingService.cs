@@ -20,23 +20,29 @@ namespace Service.Services
         private async Task<List<(JobDto, decimal)>> GetJobsMatchingFreelancerSkills(Freelancer freelancer)
         {
             var openJobs = await jobRepository.GetOpenJobs();
-            var filteredJobs = openJobs.Where(job => job.MainCategoryId == freelancer.MainCategoryId);
+            var filteredJobs = openJobs.Where(job => job.MainCategoryId == freelancer.MainCategoryId && job.Deadline >= DateTime.Now);
+
 
             var freelancerSkillIds = freelancer.Skills
                 .Select(s => s.CategoryId)
                 .ToHashSet();
 
-            var freelancerSpecialty = freelancer.Skills
-                .Where(s => s.ParentCategoryId.HasValue)
-                .Select(s => s.ParentCategoryId!.Value)
-                .ToHashSet();
+            var freelancerSpecialtyIds = freelancer.Skills
+              .Where(s => s.ParentCategoryId.HasValue)
+              .Select(s => s.ParentCategoryId!.Value)
+              .ToHashSet();
+
+            foreach (var spec in freelancer.Specializations)
+            {
+                freelancerSpecialtyIds.Add(spec.CategoryId);
+            }
 
 
             var matchingJobs = new List<(JobDto Job, decimal Value)>();
 
             foreach (var job in filteredJobs)
             {
-                if (IsSkillMatch(job, freelancerSkillIds, freelancerSpecialty))
+                if (IsSkillMatch(job, freelancerSkillIds))
                 {
                     decimal value = job.RequiredHours * job.MaxPayPerHour;
                     matchingJobs.Add((mapper.Map<JobDto>(job), value));
@@ -46,7 +52,7 @@ namespace Service.Services
         }
 
 
-        private static bool IsSkillMatch(Job job, HashSet<int> freelancerSkillIds, HashSet<int> freelancerSpecialtyIds)
+        private static bool IsSkillMatch(Job job, HashSet<int> freelancerSkillIds)
         {
             var jobRequiredSkills = job.RequiredSkills
                 .Where(s => s.Type == CategoryType.Skill)
@@ -54,21 +60,10 @@ namespace Service.Services
 
             if (jobRequiredSkills.Count == 0) return true;
 
-            var jobSpecialtyIds = jobRequiredSkills
-                .Select(s => s.ParentCategoryId)
-                .Where(id => id.HasValue)
-                .Select(id => id!.Value)
-                .ToHashSet();
-
-            bool specialtyMatched = jobSpecialtyIds.Any(id => freelancerSpecialtyIds.Contains(id));
-            double specialtyScore = specialtyMatched ? 1.0 : 0.0;
-
             int matchedSkillsCount = jobRequiredSkills.Count(s => freelancerSkillIds.Contains(s.CategoryId));
             double skillsScore = (double)matchedSkillsCount / jobRequiredSkills.Count;
 
-            double totalMatch = (specialtyScore * 0.4) + (skillsScore * 0.6);
-
-            return totalMatch >= MinimumMatchThreshold;
+            return skillsScore >= MinimumMatchThreshold;
         }
 
 

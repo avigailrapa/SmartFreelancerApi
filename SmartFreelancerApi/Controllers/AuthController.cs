@@ -1,5 +1,6 @@
 ﻿using Common.Dto;
 using Common.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -15,7 +16,7 @@ namespace SmartFreelancerApi.Controllers
         // POST: api/<AuthController>/login
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto login, bool asFreelancer = false)
+        public async Task<IActionResult> Login([FromBody] LoginDto login, [FromQuery] bool asFreelancer = false)
         {
             var user = await authService.Login(login);
 
@@ -30,12 +31,25 @@ namespace SmartFreelancerApi.Controllers
         // POST: api/<AuthController>/register
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserDto userDto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto register)
         {
 
-            var newUser = await authService.Register(userDto);
-            var token = authService.GenerateToken(userDto, false);
-            return Ok(new { Token = token, User = userDto });
+            var newUser = await authService.Register(register);
+            var token = authService.GenerateToken(newUser, false);
+            return Ok(new { Token = token, User = newUser });
+        }
+
+        // DELETE: api/<AuthController>/delete
+
+        [Authorize]
+        [HttpDelete("delete")]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var userIdClaim = (User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value) ?? throw new UnauthorizedException("Invalid token");
+            int userId = int.Parse(userIdClaim);
+            await authService.DeleteAccount(userId);
+
+            return Ok(new { Message = "User account deleted successfully" });
         }
 
 

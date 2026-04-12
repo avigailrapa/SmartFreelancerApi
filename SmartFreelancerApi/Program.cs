@@ -66,9 +66,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         });
-var connection = builder.Configuration.GetConnectionString("database-home");
 
-builder.Services.AddSingleton<IContext>(new FreelancerContext());
+builder.Services.AddDbContext<FreelancerContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("database-home")));
+
+builder.Services.AddScoped<IContext, FreelancerContext>();
 
 
 builder.Services.AddAutoMapper(cfg =>
@@ -79,7 +81,15 @@ builder.Services.AddAutoMapper(cfg =>
 }, typeof(MapperProfile));
 
 builder.Services.AddServices();
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 app.UseMiddleware<ErrorHandlingMiddleware>();
@@ -92,6 +102,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

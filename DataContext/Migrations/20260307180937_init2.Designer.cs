@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataContext.Migrations
 {
     [DbContext(typeof(FreelancerContext))]
-    [Migration("20260227094729_init")]
-    partial class init
+    [Migration("20260307180937_init2")]
+    partial class init2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -180,6 +180,13 @@ namespace DataContext.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("ClientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ClientName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -191,6 +198,9 @@ namespace DataContext.Migrations
 
                     b.Property<decimal>("HourlyRate")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsClientInvite")
+                        .HasColumnType("bit");
 
                     b.Property<int>("JobId")
                         .HasColumnType("int");

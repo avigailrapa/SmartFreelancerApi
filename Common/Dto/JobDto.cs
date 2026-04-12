@@ -1,4 +1,6 @@
-﻿namespace Common.Dto
+﻿using Common.Enums;
+
+namespace Common.Dto
 {
     public class JobDto
     {
@@ -14,7 +16,7 @@
         public int MainCategoryId { get; set; }
         public string? MainCategoryName { get; set; }
 
-        public int Status { get; set; }
+        public JobStatus Status { get; set; }
         public int AssignedFreelancerId { get; set; }
         public string? AssignedFreelancerName { get; set; }
         public ICollection<int> RequiredSkillIds { get; set; } = [];

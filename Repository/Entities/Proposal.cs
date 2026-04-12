@@ -17,6 +17,10 @@ namespace Repository.Entities
 
         public ProposalStatus Status { get; set; } = ProposalStatus.Pending;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsClientInvite { get; set; }
+        public int? ClientId { get; set; }
+        public string ClientName { get; set; }
+
 
     }
 

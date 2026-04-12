@@ -2,12 +2,10 @@
 using Repository.Entities;
 using Repository.interfaces;
 
-
 namespace FreelancersApi.DataContext
 {
-    public class FreelancerContext() : DbContext, IContext
+    public class FreelancerContext(DbContextOptions<FreelancerContext> options) : DbContext(options), IContext
     {
-        //private readonly string connection = connection;
 
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<Freelancer> Freelancers { get; set; }
@@ -16,11 +14,6 @@ namespace FreelancersApi.DataContext
         public virtual DbSet<Rating> Ratings { get; set; }
         public virtual DbSet<Proposal> Proposals { get; set; }
 
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("server=DESKTOP-AA3BLKV;database=FreelancerDB;trusted_connection=true;TrustServerCertificate=True");
-        }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -64,37 +57,38 @@ namespace FreelancersApi.DataContext
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
-            // --- קשרים עבור Freelancer ---
-            modelBuilder.Entity<Freelancer>(entity =>
-            {
-                // קטגוריה ראשית
-                entity.HasOne(f => f.MainCategory)
-                    .WithMany()
-                    .HasForeignKey(f => f.MainCategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
+            // Skills
+            modelBuilder.Entity<Freelancer>()
+                .HasMany(f => f.Skills)
+                .WithMany(c => c.SkillFreelancers)
+                .UsingEntity(j => j.ToTable("FreelancerSkills"));
 
-                // Many-to-Many עבור Skills
-                entity.HasMany(f => f.Skills)
-                    .WithMany(c => c.Freelancers)
-                    .UsingEntity(j => j.ToTable("FreelancerSkills"));
-            });
+            // Specializations
+            modelBuilder.Entity<Freelancer>()
+                .HasMany(f => f.Specializations)
+                .WithMany(c => c.SpecializationFreelancers)
+                .UsingEntity(j => j.ToTable("FreelancerSpecializations"));
+
+            modelBuilder.Entity<Freelancer>()
+             .HasOne(f => f.MainCategory)
+            .WithMany()
+            .HasForeignKey(f => f.MainCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
 
             // --- קשרים עבור Job ---
             modelBuilder.Entity<Job>(entity =>
             {
-                // קטגוריה ראשית
                 entity.HasOne(j => j.MainCategory)
                     .WithMany(c => c.Jobs)
                     .HasForeignKey(j => j.MainCategoryId)
                     .OnDelete(DeleteBehavior.Restrict);
 
-                // Many-to-Many עבור RequiredSkills
                 entity.HasMany(j => j.RequiredSkills)
                     .WithMany()
                     .UsingEntity(j => j.ToTable("JobRequiredSkills"));
             });
 
-            // --- היררכיית קטגוריות (Self-Referencing) ---
+            // --- היררכיית קטגוריות ---
             modelBuilder.Entity<Category>(entity =>
             {
                 entity.HasOne(c => c.ParentCategory)
@@ -104,11 +98,6 @@ namespace FreelancersApi.DataContext
             });
         }
 
-        public async Task Save()
-        {
-            await SaveChangesAsync();
-        }
-
-
+        public async Task Save() => await SaveChangesAsync();
     }
 }

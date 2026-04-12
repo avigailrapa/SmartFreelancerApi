@@ -1,6 +1,7 @@
 ﻿using Common.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
+using SmartFreelancerApi.Extensions;
 
 
 namespace SmartFreelancerApi.Controllers
@@ -11,24 +12,27 @@ namespace SmartFreelancerApi.Controllers
     {
         private readonly IUserService service = service;
 
-        // GET: api/<UserController>
-        [HttpGet]
-        public async Task<List<UserDto>> Get() => await service.GetAll();
+        //// GET: api/<UserController>
+        //[HttpGet]
+        //public async Task<List<UserDto>> Get() => await service.GetAll();
 
 
-        // GET api/<UserController>/5
-        [HttpGet("{id}")]
-        public async Task<UserDto> Get(int id) => await service.GetById(id);
+        //// GET api/<UserController>/5
+        //[HttpGet("{id}")]
+        //public async Task<UserDto> Get(int id) => await service.GetById(id);
 
 
-        // PUT api/<UserController>/5
-        [HttpPut("{id}")]
-        public async Task<UserDto> Put(int id, [FromBody] UserDto user) => await service.UpdateItem(id, user);
+        // PUT api/<UserController>
+        [HttpPut]
+        public async Task<UserDto> Put([FromBody] UserDto user)
+        {
+            return await service.UpdateItem(User.GetUserId().Value, user);
+        }
 
 
-        // DELETE api/<UserController>/5
-        [HttpDelete("{id}")]
-        public async Task Delete(int id) => await service.DeleteItem(id);
+        // DELETE api/<UserController>
+        [HttpDelete]
+        public async Task Delete(int id) => await service.DeleteItem(User.GetUserId().Value);
 
 
     }

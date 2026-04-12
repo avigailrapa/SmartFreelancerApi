@@ -10,10 +10,11 @@ namespace SmartFreelancerApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class FreelancerController(IFreelancerService service, IAuthService authService) : ControllerBase
+    public class FreelancerController(IFreelancerService service, IAuthService authService, IUserService userService) : ControllerBase
     {
         private readonly IAuthService authService = authService;
         private readonly IFreelancerService service = service;
+        private readonly IUserService userService = userService;
 
 
         // GET: api/<FreelancerController>
@@ -41,13 +42,30 @@ namespace SmartFreelancerApi.Controllers
 
 
 
-        // PUT api/<FreelancerController>/5
-        [HttpPut("{id}")]
-        public async Task<FreelancerDto> Put(int id, [FromBody] FreelancerDto freelancer) => await service.UpdateItem(id, freelancer);
+        // PUT api/<FreelancerController>
+        [HttpPut]
+        public async Task<FreelancerDto> Put([FromBody] FreelancerDto freelancer)
+        {
+            return await service.UpdateItem(User.GetFreelancerId().Value, freelancer);
+        }
 
-        // DELETE api/<FreelancerController>/5
-        [HttpDelete("{id}")]
-        public async Task Delete(int id) => await service.DeleteItem(id);
+        // DELETE api/<FreelancerController>
+        [HttpDelete]
+        public async Task<IActionResult> Delete()
+        {
+            var freelancerId = User.GetFreelancerId().Value;
+            var userId = User.GetUserId().Value;
+
+            await service.DeleteItem(freelancerId);
+
+            var user = await userService.GetById(userId);
+
+            var token = authService.GenerateToken(user, false);
+
+            return Ok(new { Token = token, User = user });
+
+        }
+
 
 
     }

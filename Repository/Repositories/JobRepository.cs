@@ -33,6 +33,7 @@ namespace Repository.Repositories
               .Include(j => j.Client)
               .Include(j => j.AssignedFreelancer)
               .Include(j => j.RequiredSkills)
+              .Include(j => j.MainCategory)
               .ToListAsync();
         }
 
@@ -42,6 +43,7 @@ namespace Repository.Repositories
                .Include(j => j.Client)
                .Include(j => j.AssignedFreelancer)
                .Include(j => j.RequiredSkills)
+               .Include(j => j.MainCategory)
                .FirstOrDefaultAsync(j => j.JobId == id);
         }
 
@@ -73,6 +75,12 @@ namespace Repository.Repositories
         public async Task<List<Job>> GetOpenJobs()
         {
             var jobs = GetAll().Result.Where(j => j.Status == JobStatus.Open).ToList();
+            return jobs;
+        }
+
+        public async Task<List<Job>> GetByClientId(int clientId)
+        {
+            var jobs = GetAll().Result.Where(j => j.ClientId == clientId).ToList();
             return jobs;
         }
     }

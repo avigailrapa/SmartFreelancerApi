@@ -50,10 +50,13 @@ namespace Service.Services
             return mapper.Map<JobDto>(updated);
         }
 
+        public async Task<List<JobDto>> GetByClientId(int? clientId)
+        {
+            if (clientId == null)
+                return [];
+            var jobs = await repository.GetByClientId(clientId.Value) ?? throw new NotFoundException("Jobs not found");
+            return mapper.Map<List<JobDto>>(jobs);
 
-
-
-
-
+        }
     }
 }

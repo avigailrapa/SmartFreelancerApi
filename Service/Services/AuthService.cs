@@ -4,12 +4,12 @@ using System.Text;
 using AutoMapper;
 using Common.Dto;
 using Common.Exceptions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Repository.Entities;
 using Repository.interfaces;
 using Service.Interfaces;
-
 
 namespace Service.Services
 {
@@ -21,9 +21,26 @@ namespace Service.Services
 
         public async Task<UserDto> Login(LoginDto login)
         {
-            var users = await userRepository.GetAll();
-            var user = users.FirstOrDefault(users => users.FullName == login.UserName && users.Password == login.Password) ?? throw new UnauthorizedException("Invalid username or password");
+            if (string.IsNullOrWhiteSpace(login?.Email) || string.IsNullOrWhiteSpace(login?.Password))
+                throw new UnauthorizedException("Invalid email or password");
 
+            var emailNormalized = login.Email.Trim().ToLowerInvariant();
+
+            var users = await userRepository.GetAll();
+
+            var user = users.FirstOrDefault(u => u.Email.Trim().ToLowerInvariant() == emailNormalized)
+                       ?? throw new UnauthorizedException("Invalid email or password");
+
+            var hasher = new PasswordHasher<User>();
+
+            var result = hasher.VerifyHashedPassword(
+                user,
+                user.Password,
+                login.Password
+            );
+
+            if (result != PasswordVerificationResult.Success)
+                throw new UnauthorizedException("Invalid email or password");
 
             return new UserDto
             {
@@ -34,23 +51,49 @@ namespace Service.Services
             };
         }
 
-        public async Task<UserDto> Register(UserDto user)
+        public async Task<UserDto> Register(RegisterDto user)
         {
+            if (user == null)
+                throw new BadRequestException("Invalid registration data");
+
+            if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.Password))
+                throw new BadRequestException("Email and password are required");
+
+            var emailNormalized = user.Email.Trim().ToLowerInvariant();
+
+            const int MinPasswordLength = 6;
+            if (user.Password.Length < MinPasswordLength)
+                throw new BadRequestException($"Password must be at least {MinPasswordLength} characters long");
+
             var existingUser = (await userRepository.GetAll())
-                .FirstOrDefault(u => u.FullName == user.FullName && u.Email == user.Email);
+                .FirstOrDefault(u => u.Email.Trim().ToLowerInvariant() == emailNormalized);
+
             if (existingUser != null)
                 throw new BadRequestException("User already exists");
 
-            var createdUser = await userRepository.AddItem(mapper.Map<User>(user));
+            var newUser = new User
+            {
+                FullName = user.FullName?.Trim(),
+                Email = emailNormalized
+            };
+
+            var hasher = new PasswordHasher<User>();
+            newUser.Password = hasher.HashPassword(newUser, user.Password);
+
+            var createdUser = await userRepository.AddItem(newUser);
 
             return new UserDto
             {
                 Id = createdUser.Id,
                 FullName = createdUser.FullName,
-                Email = createdUser.Email,
-                FreelancerId = null
+                Email = createdUser.Email
             };
+        }
 
+        public async Task DeleteAccount(int userId)
+        {
+            var user = await userRepository.GetById(userId) ?? throw new NotFoundException("User not found");
+            await userRepository.DeleteItem(userId);
         }
 
         public string GenerateToken(UserDto u, bool asFreelancer = false)
@@ -58,18 +101,19 @@ namespace Service.Services
             var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
 
+            var role = asFreelancer ? "Freelancer" : "User";
+
             var claims = new List<Claim>
-            {
+             {
+               new(ClaimTypes.NameIdentifier, u.Id.ToString()),
                new("UserId", u.Id.ToString()),
-               new(ClaimTypes.Role, "User")
-            };
+               new(ClaimTypes.Role, role)
+          };
 
             if (asFreelancer && u.FreelancerId.HasValue)
             {
-                claims.Add(new Claim(ClaimTypes.Role, "Freelancer"));
                 claims.Add(new Claim("FreelancerId", u.FreelancerId.Value.ToString()));
             }
-
 
             var token = new JwtSecurityToken(
                 configuration["Jwt:Issuer"],
@@ -81,8 +125,6 @@ namespace Service.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-
 
     }
 }

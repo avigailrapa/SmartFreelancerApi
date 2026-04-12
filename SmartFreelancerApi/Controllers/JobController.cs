@@ -46,5 +46,9 @@ namespace SmartFreelancerApi.Controllers
         [HttpGet("open")]
         public async Task<List<JobDto>> GetOpenJobs() => await service.GetOpenJobs();
 
+        [Authorize]
+        [HttpGet("my-jobs")]
+        public async Task<List<JobDto>> GetMyJobs() => await service.GetByClientId(User.GetUserId());
     }
+
 }

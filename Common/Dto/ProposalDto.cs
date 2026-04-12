@@ -7,6 +7,8 @@ namespace Common.Dto
         public int Id { get; set; }
         public int FreelancerId { get; set; }
         public string FreelancerName { get; set; }
+        public int ClientId { get; set; }
+        public string ClientName { get; set; }
         public int JobId { get; set; }
         public string JobTitle { get; set; }
         public decimal HourlyRate { get; set; }
@@ -15,6 +17,7 @@ namespace Common.Dto
         public string Message { get; set; }
         public ProposalStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsClientInvite { get; set; }
     }
 }
 

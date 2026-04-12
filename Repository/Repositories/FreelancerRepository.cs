@@ -29,25 +29,27 @@ namespace Repository.Repositories
         public async Task<List<Freelancer>> GetAll()
         {
             return await ctx.Freelancers
-                .Include(f => f.User)
-                .Include(f => f.Skills)
-                    .ThenInclude(s => s.ParentCategory)
-                .Include(f => f.JobsInProgress)
-                .Include(f => f.RatingsReceived)
-                    .ThenInclude(r => r.User)
-                .ToListAsync();
+            .Include(f => f.User)
+            .Include(f => f.MainCategory)
+            .Include(f => f.Skills)
+            .Include(f => f.Specializations)
+            .Include(f => f.JobsInProgress)
+            .Include(f => f.RatingsReceived)
+                .ThenInclude(r => r.User)
+            .ToListAsync();
         }
 
         public async Task<Freelancer?> GetById(int id)
         {
             return await ctx.Freelancers
-                .Include(f => f.User)
-                .Include(f => f.Skills)
-                .ThenInclude(s => s.ParentCategory)
-                .Include(f => f.JobsInProgress)
-                .Include(f => f.RatingsReceived)
-                .ThenInclude(r => r.User)
-                .FirstOrDefaultAsync(x => x.FreelancerId == id);
+             .Include(f => f.User)
+             .Include(f => f.MainCategory)
+             .Include(f => f.Skills)
+             .Include(f => f.Specializations)
+             .Include(f => f.JobsInProgress)
+             .Include(f => f.RatingsReceived)
+                 .ThenInclude(r => r.User)
+             .FirstOrDefaultAsync(x => x.FreelancerId == id);
         }
 
         public async Task<Freelancer> UpdateItem(int id, Freelancer freelancer)

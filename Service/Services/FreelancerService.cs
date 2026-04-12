@@ -18,6 +18,12 @@ namespace Service.Services
         public async Task DeleteItem(int id)
         {
             var freelancer = await repository.GetById(id) ?? throw new NotFoundException("Freelancer not found");
+            var user = await userRepository.GetById(freelancer.UserId);
+            if (user != null)
+            {
+                user.FreelancerProfile = null;
+                await userRepository.UpdateItem(user.Id, user);
+            }
             await repository.DeleteItem(id);
         }
         public async Task<List<FreelancerDto>> GetAll()
@@ -43,6 +49,9 @@ namespace Service.Services
         {
             var user = await userRepository.GetById(userId) ?? throw new NotFoundException("User not found");
 
+            if (user.FreelancerProfile != null)
+                throw new BadRequestException("User is already a freelancer");
+
             if (freelancerDto.ImageFile != null)
             {
                 var fileName = Guid.NewGuid() + Path.GetExtension(freelancerDto.ImageFile.FileName);
@@ -66,6 +75,18 @@ namespace Service.Services
                     freelancer.Skills.Add(category);
                 }
             }
+
+            if (freelancerDto.SpecializationIds != null)
+            {
+                freelancer.Specializations = [];
+
+                foreach (var id in freelancerDto.SpecializationIds)
+                {
+                    var category = await categoryRepository.GetById(id) ?? throw new BadRequestException($"Category with id {id} not found");
+                    freelancer.Specializations.Add(category);
+                }
+            }
+
             var createdFreelancer = await repository.AddItem(freelancer);
 
             user.FreelancerProfile = createdFreelancer;

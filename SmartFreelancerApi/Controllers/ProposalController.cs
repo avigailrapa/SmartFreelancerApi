@@ -62,6 +62,16 @@ namespace SmartFreelancerApi.Controllers
         [HttpPost("{proposalId}/reject")]
         public async Task RejectProposal(int proposalId) => await service.RejectProposal(proposalId);
 
+        // POST api/proposal/invite
+        [Authorize(Roles = "User")]
+        [HttpPost("invite")]
+        public async Task<ProposalDto> InviteFreelancer([FromBody] InviteProposalRequest request)
+        {
+            var clientId = User.GetUserId() ?? throw new UnauthorizedException("User is not logged in");
+            var clientName = User.Claims.FirstOrDefault(c => c.Type == "name")?.Value ?? "Unknown";
+            return await service.InviteFreelancer(request.FreelancerId, request.JobId, request.HourlyRate, request.EstimatedHours, request.Message, clientId, clientName);
+        }
+
 
 
     }

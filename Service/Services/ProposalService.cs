@@ -8,15 +8,18 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    internal class ProposalService(IProposalRepository repository, IMapper mapper) : IProposalService
+    internal class ProposalService(IProposalRepository repository, IJobRepository jobRepository, IMapper mapper) : IProposalService
     {
         private readonly IProposalRepository repository = repository;
+        private readonly IJobRepository jobRepository = jobRepository;
         private readonly IMapper mapper = mapper;
 
         public async Task<ProposalDto> ApproveProposal(int proposalId)
         {
             var proposal = await repository.GetById(proposalId) ?? throw new NotFoundException("Proposal not found");
 
+            if (proposal.Job.Status != JobStatus.Open)
+                throw new ConflictException("Job is not open");
 
             if (proposal.Status != ProposalStatus.Pending)
                 throw new ConflictException("Proposal cannot be approved");
@@ -61,6 +64,36 @@ namespace Service.Services
             return mapper.Map<List<ProposalDto>>(proposal);
         }
 
+        public async Task<ProposalDto> InviteFreelancer(int freelancerId, int jobId, decimal price, int hours, string message, int clientId, string clientName)
+        {
+            var job = await jobRepository.GetById(jobId) ?? throw new NotFoundException("Job not found");
+
+            if (job.Status != JobStatus.Open)
+                throw new ConflictException("Job is not open");
+
+            if (await repository.Exists(freelancerId, jobId))
+                throw new ConflictException("Proposal or invite already exists for this job");
+
+            var proposal = new Proposal
+            {
+                FreelancerId = freelancerId,
+                JobId = jobId,
+                HourlyRate = price,
+                EstimatedHours = hours,
+                Message = message,
+                Status = ProposalStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                IsClientInvite = true,
+                ClientId = clientId,
+                ClientName = clientName
+
+            };
+
+            await repository.Add(proposal);
+            return mapper.Map<ProposalDto>(proposal);
+
+        }
+
         public async Task RejectProposal(int proposalId)
         {
             var proposal = await repository.GetById(proposalId) ?? throw new NotFoundException("Proposal not found");
@@ -79,6 +112,10 @@ namespace Service.Services
             if (await repository.Exists(freelancerId, jobId))
                 throw new ConflictException("Proposal already exists for this job");
 
+            var job = await jobRepository.GetById(jobId) ?? throw new NotFoundException("Job not found");
+
+            if (job.Status != JobStatus.Open)
+                throw new ConflictException("Cannot send proposal to a job that is not open");
 
             var proposal = new Proposal
             {
@@ -88,7 +125,9 @@ namespace Service.Services
                 EstimatedHours = hours,
                 Message = message,
                 Status = ProposalStatus.Pending,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsClientInvite = false,
+
             };
             await repository.Add(proposal);
             return mapper.Map<ProposalDto>(proposal);

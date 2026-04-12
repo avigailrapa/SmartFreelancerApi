@@ -6,7 +6,9 @@ namespace SmartFreelancerApi.Extensions
     {
         public static int? GetUserId(this ClaimsPrincipal user)
         {
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                              ?? user.FindFirst("UserId")?.Value;
+
             return int.TryParse(userIdClaim, out int id) ? id : null;
         }
 

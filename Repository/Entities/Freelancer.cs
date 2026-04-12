@@ -19,6 +19,7 @@ namespace Repository.Entities
         public decimal HourlyRate { get; set; }
         public ExperienceLevel ExperienceLevel { get; set; }
         public FreelancerStatus Status { get; set; }
+        public ICollection<Category> Specializations { get; set; } = [];
         public ICollection<Category> Skills { get; set; } = [];
         public ICollection<Job> JobsInProgress { get; set; } = [];
         public ICollection<Rating> RatingsReceived { get; set; } = [];
