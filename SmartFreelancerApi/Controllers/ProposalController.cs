@@ -73,6 +73,11 @@ namespace SmartFreelancerApi.Controllers
 		}
 
 
+		// DELETE api/ProposalController/5
+		[HttpDelete("{proposalId}")]
+		public async Task Delete(int proposalId) => await service.DeleteProposal(proposalId);
+
+
 
 	}
 

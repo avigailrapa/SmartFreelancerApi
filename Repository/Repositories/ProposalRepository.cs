@@ -14,9 +14,24 @@ namespace Repository.Repositories
 		{
 			await ctx.Proposals.AddAsync(proposal);
 			await ctx.Save();
-			return proposal;
+
+			return await ctx.Proposals
+				.Include(p => p.Job)
+					.ThenInclude(j => j.Client)
+				.Include(p => p.Freelancer)
+					.ThenInclude(f => f.User)
+				.FirstAsync(p => p.Id == proposal.Id);
 		}
 
+		public async Task Delete(int id)
+		{
+			var p = await ctx.Proposals.FirstOrDefaultAsync(p => p.Id == id);
+			if (p != null)
+			{
+				ctx.Proposals.Remove(p);
+			}
+			await ctx.Save();
+		}
 
 		public async Task<bool> Exists(int freelancerId, int jobId)
 		{
@@ -36,7 +51,9 @@ namespace Repository.Repositories
 		{
 			return await ctx.Proposals
 				.Include(p => p.Freelancer)
+					.ThenInclude(f => f.User)
 				.Include(p => p.Job)
+					.ThenInclude(j => j.Client)
 				.FirstOrDefaultAsync(p => p.Id == id);
 		}
 
@@ -44,6 +61,7 @@ namespace Repository.Repositories
 		{
 			return await ctx.Proposals
 				.Include(p => p.Freelancer)
+				 .ThenInclude(f => f.User)
 				.Where(p => p.JobId == jobId)
 				.ToListAsync();
 		}

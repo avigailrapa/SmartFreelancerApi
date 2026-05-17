@@ -12,6 +12,7 @@ namespace Service.Interfaces
 		Task<ProposalDto> GetProposalById(int proposalId);
 		Task<List<ProposalDto>> GetProposalsByUser(int userId);
 		Task<ProposalDto> InviteFreelancer(int freelancerId, int jobId, decimal price, int hours, string message, int clientId, string clientName);
+		Task DeleteProposal(int proposalId);
 	}
 }
 

@@ -3,16 +3,16 @@ using Common.Dto;
 using Common.Enums;
 using Common.Exceptions;
 using Repository.Entities;
+using Repository.interfaces;
 using Repository.Interfaces;
-using Repository.Repositories;
 using Service.Interfaces;
 
 namespace Service.Services
 {
-	public class JobService(IJobRepository repository, CategoryRepository categoryRepository, IMapper mapper) : IJobService
+	public class JobService(IJobRepository repository, IRepository<Category> categoryRepository, IMapper mapper) : IJobService
 	{
 		private readonly IJobRepository repository = repository;
-		private readonly CategoryRepository categoryRepository = categoryRepository;
+		private readonly IRepository<Category> categoryRepository = categoryRepository;
 		private readonly IMapper mapper = mapper;
 
 		public async Task<JobDto> AddItem(CreateJobDto createJob, int clientId)
@@ -76,11 +76,20 @@ namespace Service.Services
 
 		public async Task<List<JobDto>> GetByClientId(int? clientId)
 		{
-			if (clientId == null)
-				return [];
+			if (clientId == null) return [];
 			var jobs = await repository.GetByClientId(clientId.Value) ?? throw new NotFoundException("Jobs not found");
 			return mapper.Map<List<JobDto>>(jobs);
 
 		}
+
+		public async Task CompleteJob(int jobId, int freelancerId)
+		{
+			var job = await repository.GetById(jobId) ?? throw new NotFoundException("Job not found"); ;
+			if (job.AssignedFreelancerId != freelancerId) throw new UnauthorizedAccessException("You are not assigned to this job");
+			if (job.Status != JobStatus.InProgress) throw new ConflictException("Job is not in progress");
+			job.Status = JobStatus.Completed;
+			await repository.UpdateItem(jobId, job);
+		}
+
 	}
 }

@@ -8,11 +8,12 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-	internal class ProposalService(IProposalRepository repository, IJobRepository jobRepository, IMapper mapper) : IProposalService
+	internal class ProposalService(IProposalRepository repository, IJobRepository jobRepository, IMapper mapper, EmailService emailService) : IProposalService
 	{
 		private readonly IProposalRepository repository = repository;
 		private readonly IJobRepository jobRepository = jobRepository;
 		private readonly IMapper mapper = mapper;
+		private readonly EmailService emailService = emailService;
 
 		public async Task<ProposalDto> ApproveProposal(int proposalId)
 		{
@@ -34,6 +35,14 @@ namespace Service.Services
 			await repository.Update(proposalId, proposal);
 
 			return mapper.Map<ProposalDto>(proposal);
+
+		}
+
+		public async Task DeleteProposal(int proposalId)
+		{
+			var proposal = await repository.GetById(proposalId) ?? throw new NotFoundException("Proposal not found");
+			if (proposal.Status != ProposalStatus.Pending) throw new ConflictException("Only pending proposals can be deleted");
+			await repository.Delete(proposalId);
 
 		}
 
@@ -129,12 +138,34 @@ namespace Service.Services
 				IsClientInvite = false,
 				ClientId = job.ClientId,
 				ClientName = job.Client.FullName ?? ""
-
 			};
-			var addedProposal = await repository.Add(proposal);
-			var fullProposal = await repository.GetById(addedProposal.Id) ?? throw new NotFoundException("Proposal not found after creation");
-			return mapper.Map<ProposalDto>(fullProposal);
 
+			var addedProposal = await repository.Add(proposal);
+
+			var fullProposal = await repository.GetById(addedProposal.Id)
+				?? throw new NotFoundException("Proposal not found after creation");
+
+			try
+			{
+				await emailService.SendProposalNotification(
+					fullProposal.Job.Client.Email,
+					fullProposal.Job.Client.FullName ?? "",
+					fullProposal.Job.Title,
+					fullProposal.Freelancer.User.FullName ?? ""
+				);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("EMAIL ERROR:");
+				Console.WriteLine(ex.Message);
+
+				if (ex.InnerException != null)
+					Console.WriteLine(ex.InnerException.Message);
+
+				throw;
+			}
+
+			return mapper.Map<ProposalDto>(fullProposal);
 		}
 
 
