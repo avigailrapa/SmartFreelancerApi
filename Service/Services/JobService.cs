@@ -67,12 +67,6 @@ namespace Service.Services
 			return mapper.Map<JobDto>(job);
 		}
 
-		public async Task<JobDto> UpdateItem(int id, JobDto job)
-		{
-			var exists = await repository.GetById(id) ?? throw new KeyNotFoundException("Job not found");
-			var updated = await repository.UpdateItem(id, mapper.Map<Job>(job));
-			return mapper.Map<JobDto>(updated);
-		}
 
 		public async Task<List<JobDto>> GetByClientId(int? clientId)
 		{
@@ -82,13 +76,21 @@ namespace Service.Services
 
 		}
 
-		public async Task CompleteJob(int jobId, int freelancerId)
+		public async Task<List<JobDto>> GetByFreelancerId(int? freelancerId)
 		{
-			var job = await repository.GetById(jobId) ?? throw new NotFoundException("Job not found"); ;
-			if (job.AssignedFreelancerId != freelancerId) throw new UnauthorizedAccessException("You are not assigned to this job");
-			if (job.Status != JobStatus.InProgress) throw new ConflictException("Job is not in progress");
+			if (freelancerId == null) return [];
+			var jobs = await repository.GetByFreelancerId(freelancerId.Value) ?? throw new NotFoundException("Jobs not found");
+			return mapper.Map<List<JobDto>>(jobs);
+
+		}
+
+		public async Task<JobDto> MarkAsCompleted(int jobId, int freelancerId)
+		{
+			var job = await repository.GetById(jobId) ?? throw new NotFoundException("Job not found");
+			if (job.AssignedFreelancerId != freelancerId) throw new UnauthorizedAccessException("You are not authorized to complete this job");
 			job.Status = JobStatus.Completed;
 			await repository.UpdateItem(jobId, job);
+			return mapper.Map<JobDto>(job);
 		}
 
 	}

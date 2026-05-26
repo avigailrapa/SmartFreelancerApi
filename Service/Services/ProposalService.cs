@@ -8,12 +8,13 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-	internal class ProposalService(IProposalRepository repository, IJobRepository jobRepository, IMapper mapper, EmailService emailService) : IProposalService
+	internal class ProposalService(IProposalRepository repository, IJobRepository jobRepository, IMapper mapper, EmailService emailService, IFreelancerService freelancerService) : IProposalService
 	{
 		private readonly IProposalRepository repository = repository;
 		private readonly IJobRepository jobRepository = jobRepository;
 		private readonly IMapper mapper = mapper;
 		private readonly EmailService emailService = emailService;
+		private readonly IFreelancerService freelancerService = freelancerService;
 
 		public async Task<ProposalDto> ApproveProposal(int proposalId)
 		{
@@ -29,6 +30,8 @@ namespace Service.Services
 
 			proposal.Job.Status = JobStatus.InProgress;
 			proposal.Job.AssignedFreelancerId = proposal.FreelancerId;
+
+			await freelancerService.DeductHoursAfterJobAccepted(proposal.FreelancerId, proposal.Job.RequiredHours);
 
 			await repository.RejectAllByJobExcept(proposal.JobId, proposalId);
 

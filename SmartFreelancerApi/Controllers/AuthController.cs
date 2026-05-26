@@ -1,6 +1,5 @@
 ﻿using Common.Dto;
 using Common.Exceptions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Service.Interfaces;
 
@@ -39,29 +38,7 @@ namespace SmartFreelancerApi.Controllers
 			return Ok(new { Token = token, User = newUser });
 		}
 
-		// DELETE: api/<AuthController>/delete
-
-		[Authorize]
-		[HttpDelete("delete")]
-		public async Task<IActionResult> DeleteAccount()
-		{
-			var userIdClaim = (User.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value) ?? throw new UnauthorizedException("Invalid token");
-			int userId = int.Parse(userIdClaim);
-			await authService.DeleteAccount(userId);
-
-			return Ok(new { Message = "User account deleted successfully" });
-		}
-
-
 
 	}
-
-
-
-
-
-
-
-
 
 }

@@ -1,31 +1,32 @@
 ﻿using AutoMapper;
 using Common.Dto;
+using Common.Dto.Common.Dto;
 using Repository.Entities;
 using Repository.Repositories;
 
 namespace Service.Services
 {
-    public class RatingService(RatingRepository repository, IMapper mapper)
-    {
-        private readonly RatingRepository repository = repository;
-        private readonly IMapper mapper = mapper;
+	public class RatingService(RatingRepository repository, IMapper mapper)
+	{
+		private readonly RatingRepository repository = repository;
+		private readonly IMapper mapper = mapper;
 
-        public async Task<RatingDto> AddRating(RatingDto ratingDto)
-        {
-            var rating = new Rating
-            {
-                FreelancerId = ratingDto.FreelancerId,
-                UserId = ratingDto.UserId,
-                Stars = ratingDto.Stars,
-                Comment = ratingDto.Comment,
-                CreatedAt = DateTime.Now
-            };
+		public async Task<RatingDto> AddRating(RatingCreateDto ratingDto, int userId)
+		{
+			var rating = new Rating
+			{
+				FreelancerId = ratingDto.FreelancerId,
+				UserId = userId,
+				Stars = ratingDto.Stars,
+				Comment = ratingDto.Comment,
+				CreatedAt = DateTime.Now
+			};
 
-            var added = await repository.AddItem(rating);
+			var added = await repository.AddItem(rating);
 
-            return mapper.Map<RatingDto>(added);
-        }
+			return mapper.Map<RatingDto>(added);
+		}
 
 
-    }
+	}
 }

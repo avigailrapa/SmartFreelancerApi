@@ -19,9 +19,13 @@ namespace Repository.Repositories
 
 		public async Task DeleteItem(int id)
 		{
-			var j = await ctx.Jobs.FirstOrDefaultAsync(x => x.JobId == id);
+			var j = await ctx.Jobs
+				.Include(j => j.Proposals)
+				.FirstOrDefaultAsync(x => x.JobId == id);
+
 			if (j != null)
 			{
+				ctx.Proposals.RemoveRange(j.Proposals);
 				ctx.Jobs.Remove(j);
 			}
 			await ctx.Save();
@@ -87,6 +91,16 @@ namespace Repository.Repositories
 				.Include(j => j.RequiredSkills)
 				.Where(j => j.ClientId == clientId)
 				.ToListAsync();
+		}
+
+		public async Task<List<Job>> GetByFreelancerId(int freelancerId)
+		{
+			return await ctx.Jobs
+				   .Include(j => j.Client)
+				   .Include(j => j.RequiredSkills)
+				   .Where(j => j.AssignedFreelancerId == freelancerId &&
+							  (j.Status == JobStatus.InProgress || j.Status == JobStatus.Completed))
+				   .ToListAsync();
 		}
 	}
 }

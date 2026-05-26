@@ -6,12 +6,12 @@ namespace Service.Interfaces
 	{
 		Task<List<JobDto>> GetAll();
 		Task<JobDto> GetById(int id);
-		Task<JobDto> UpdateItem(int id, JobDto item);
 		Task DeleteItem(int id);
 		public Task<List<JobDto>> GetOpenJobs();
 		public Task<List<JobDto>> GetByClientId(int? clientId);
-		public Task<JobDto> AddItem(CreateJobDto createJob, int clientId);
-		public Task CompleteJob(int jobId, int freelancerId);
 
+		public Task<List<JobDto>> GetByFreelancerId(int? freelancerId);
+		public Task<JobDto> AddItem(CreateJobDto createJob, int clientId);
+		Task<JobDto> MarkAsCompleted(int jobId, int freelancerId);
 	}
 }

@@ -5,35 +5,21 @@ using Service.Interfaces;
 
 namespace SmartFreelancerApi.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CategoryController(IService<CategoryDto> service) : ControllerBase
-    {
-        private readonly IService<CategoryDto> service = service;
+	[Route("api/[controller]")]
+	[ApiController]
+	public class CategoryController(IService<CategoryDto> service) : ControllerBase
+	{
+		private readonly IService<CategoryDto> service = service;
 
-        // GET: api/<CategoryController>
-        [HttpGet]
-        public async Task<List<CategoryDto>> Get() => await service.GetAll();
-
-
-        // GET api/<CategoryController>/5
-        [HttpGet("{id}")]
-        public async Task<CategoryDto> Get(int id) => await service.GetById(id);
+		// GET: api/<CategoryController>
+		[HttpGet]
+		public async Task<List<CategoryDto>> Get() => await service.GetAll();
 
 
-        // POST api/<CategoryController>
-        [HttpPost]
-        public async Task<CategoryDto> Post([FromBody] CategoryDto category) => await service.AddItem(category);
+		// GET api/<CategoryController>/5
+		[HttpGet("{id}")]
+		public async Task<CategoryDto> Get(int id) => await service.GetById(id);
 
 
-        // PUT api/<CategoryController>/5
-        [HttpPut("{id}")]
-        public async Task<CategoryDto> Put(int id, [FromBody] CategoryDto category) => await service.UpdateItem(id, category);
-
-
-        // DELETE api/<CategoryController>/5
-        [HttpDelete("{id}")]
-        public async Task Delete(int id) => await service.DeleteItem(id);
-
-    }
+	}
 }

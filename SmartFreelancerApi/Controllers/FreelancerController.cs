@@ -30,7 +30,7 @@ namespace SmartFreelancerApi.Controllers
 		// POST: api/<FreelancerController>/become-freelancer/5
 		[Authorize(Roles = "User")]
 		[HttpPost("become-freelancer")]
-		public async Task<IActionResult> BecomeFreelancer([FromForm] FreelancerDto freelancerDto)
+		public async Task<IActionResult> BecomeFreelancer([FromForm] BecomeFreelancerDto freelancerDto)
 		{
 			var userId = User.GetUserId() ?? throw new UnauthorizedException("User is not logged in");
 
@@ -49,22 +49,18 @@ namespace SmartFreelancerApi.Controllers
 			return await service.UpdateItem(User.GetFreelancerId().Value, freelancer);
 		}
 
-		// DELETE api/<FreelancerController>
-		[HttpDelete]
-		public async Task<IActionResult> Delete()
-		{
-			var freelancerId = User.GetFreelancerId().Value;
-			var userId = User.GetUserId().Value;
+		//// PUT api/<FreelancerController>/availability
+		//[HttpPut("availability")]
+		//public async Task<IActionResult> UpdateAvailability([FromBody] UpdateAvailabilityDto dto)
+		//{
+		//	var freelancerId = User.GetUserId();
 
-			await service.DeleteItem(freelancerId);
+		//	await service.UpdateAvailability((int)freelancerId, dto);
 
-			var user = await userService.GetById(userId);
+		//	return NoContent();
 
-			var token = authService.GenerateToken(user);
+		//}
 
-			return Ok(new { Token = token, User = user });
-
-		}
 
 
 

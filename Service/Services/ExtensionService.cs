@@ -5,25 +5,25 @@ using Service.Interfaces;
 
 namespace Service.Services
 {
-    public static class ExtensionService
-    {
-        public static IServiceCollection AddServices(this IServiceCollection services)
-        {
-            services.AddRepository();
+	public static class ExtensionService
+	{
+		public static IServiceCollection AddServices(this IServiceCollection services)
+		{
+			services.AddRepository();
 
-            services.AddScoped<IService<CategoryDto>, CategoryService>();
-            services.AddScoped<RatingRepository>();
+			services.AddScoped<IService<CategoryDto>, CategoryService>();
+			services.AddScoped<RatingService>();
 
-            services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IFreelancerService, FreelancerService>();
-            services.AddScoped<IJobService, JobService>();
+			services.AddScoped<IUserService, UserService>();
+			services.AddScoped<IFreelancerService, FreelancerService>();
+			services.AddScoped<IJobService, JobService>();
 
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IMatchingService, MatchingService>();
-            services.AddScoped<IProposalService, ProposalService>();
+			services.AddScoped<IAuthService, AuthService>();
+			services.AddScoped<IMatchingService, MatchingService>();
+			services.AddScoped<IProposalService, ProposalService>();
 
-            return services;
-        }
-    }
+			return services;
+		}
+	}
 }
 

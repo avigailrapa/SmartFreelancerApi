@@ -31,12 +31,7 @@ namespace SmartFreelancerApi.Controllers
 		{
 			int clientId = User.GetUserId() ?? throw new UnauthorizedAccessException();
 			return await service.AddItem(job, clientId);
-
 		}
-
-		// PUT api/job/5
-		[HttpPut("{id}")]
-		public async Task<JobDto> Put(int id, [FromBody] JobDto job) => await service.UpdateItem(id, job);
 
 		// DELETE api/job/5
 		[HttpDelete("{id}")]
@@ -50,13 +45,24 @@ namespace SmartFreelancerApi.Controllers
 		[Authorize]
 		[HttpGet("my-jobs")]
 		public async Task<List<JobDto>> GetMyJobs() => await service.GetByClientId(User.GetUserId());
-		[HttpPut("{jobId}/complete")]
-		public async Task CompleteJob(int jobId)
+
+
+		[Authorize]
+		[HttpGet("freelancer-jobs")]
+		public async Task<List<JobDto>> GetMyFreelancerJobs()
 		{
 			var freelancerId = User.GetFreelancerId() ?? throw new UnauthorizedException("Freelancer not found");
-			await service.CompleteJob(jobId, freelancerId);
+			return await service.GetByFreelancerId(freelancerId);
 		}
 
+		// PUT api/job/5/complete
+		[Authorize]
+		[HttpPut("{id}/complete")]
+		public async Task<JobDto> MarkAsComplete(int id)
+		{
+			var freelancerId = User.GetFreelancerId() ?? throw new UnauthorizedException("Freelancer profile not found");
+			return await service.MarkAsCompleted(id, freelancerId);
+		}
 
 	}
 

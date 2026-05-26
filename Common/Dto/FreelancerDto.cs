@@ -14,8 +14,11 @@ namespace Common.Dto
 		public byte[]? ArrImage { get; set; }
 		public string Bio { get; set; }
 		public int AvailableHours { get; set; }
+		public DateTime AvailableUntil { get; set; }
 		public decimal HourlyRate { get; set; }
 		public double AverageStars { get; set; }
+		public string Email { get; set; }
+		public RatingDto? LatestRating { get; set; }
 
 		public ExperienceLevel ExperienceLevel { get; set; }
 		public FreelancerStatus Status { get; set; }
@@ -23,6 +26,7 @@ namespace Common.Dto
 		public ICollection<string>? SpecializationNames { get; set; }
 		public ICollection<int>? SkillIds { get; set; }
 		public ICollection<string>? SkillNames { get; set; }
+
 
 
 
