@@ -1,5 +1,4 @@
 ﻿using Repository.Entities;
-using Repository.interfaces;
 
 namespace Repository.Interfaces
 {
@@ -8,6 +7,8 @@ namespace Repository.Interfaces
 		Task<List<Job>> GetOpenJobs();
 		Task<List<Job>> GetByClientId(int clientId);
 		Task<List<Job>> GetByFreelancerId(int freelancerId);
+		Task MarkAsCompleted(int jobId);
+
 
 	}
 }

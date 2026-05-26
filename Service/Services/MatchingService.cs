@@ -3,7 +3,6 @@ using Common.Dto;
 using Common.Enums;
 using Common.Exceptions;
 using Repository.Entities;
-using Repository.interfaces;
 using Repository.Interfaces;
 using Service.Interfaces;
 
@@ -29,11 +28,14 @@ namespace Service.Services
 			double totalDays = (freelancer.AvailableUntil - DateTime.UtcNow).TotalDays;
 			if (totalDays <= 0) return false;
 
-			DateTime effectiveDeadline = job.Deadline == default
-				? freelancer.AvailableUntil
-				: job.Deadline < freelancer.AvailableUntil
-					? job.Deadline
-					: freelancer.AvailableUntil;
+			DateTime effectiveDeadline;
+
+			if (job.Deadline == default)
+				effectiveDeadline = freelancer.AvailableUntil;
+			else if (job.Deadline < freelancer.AvailableUntil)
+				effectiveDeadline = job.Deadline;
+			else
+				effectiveDeadline = freelancer.AvailableUntil;
 
 			double daysAvailable = (effectiveDeadline - DateTime.UtcNow).TotalDays;
 			if (daysAvailable <= 0) return false;
@@ -61,20 +63,32 @@ namespace Service.Services
 		}
 
 
-		private static (bool isMatch, double skillScore) IsSkillMatch(Job job, HashSet<int> freelancerSkillIds)
+		private static (bool isMatch, double skillScore) IsSkillMatch(
+		   Job job,
+		   HashSet<int> freelancerSkillIds,
+		   HashSet<int> freelancerSpecialtyIds)
 		{
 			var jobRequiredSkills = job.RequiredSkills
 				.Where(s => s.Type == CategoryType.Skill)
 				.ToList();
 
-			if (jobRequiredSkills.Count == 0) return (true, 1.0);
+			var jobSpecialty = job.RequiredSkills
+				.FirstOrDefault(s => s.Type == CategoryType.Specialty);
 
-			int matchedSkillsCount = jobRequiredSkills.Count(s => freelancerSkillIds.Contains(s.CategoryId));
-			double skillsScore = (double)matchedSkillsCount / jobRequiredSkills.Count;
+			if (jobRequiredSkills.Count == 0 && jobSpecialty == null)
+				return (true, 1.0);
 
-			return (skillsScore >= MinimumMatchThreshold, skillsScore);
+			int matchedSkills = jobRequiredSkills
+				.Count(s => freelancerSkillIds.Contains(s.CategoryId));
+
+			int matchedSpecialties = jobSpecialty != null &&
+				freelancerSpecialtyIds.Contains(jobSpecialty.CategoryId) ? 1 : 0;
+
+			double score = (matchedSkills + matchedSpecialties * 2.0)
+						 / (jobRequiredSkills.Count + (jobSpecialty != null ? 1 : 0));
+
+			return (score >= MinimumMatchThreshold, score);
 		}
-
 
 		private async Task<List<(JobDto job, decimal value)>> GetJobsMatchingFreelancerSkills(Freelancer freelancer)
 		{
@@ -85,13 +99,9 @@ namespace Service.Services
 				.Select(s => s.CategoryId)
 				.ToHashSet();
 
-			var freelancerSpecialtyIds = freelancer.Skills
-				.Where(s => s.ParentCategoryId.HasValue)
-				.Select(s => s.ParentCategoryId!.Value)
+			var freelancerSpecialtyIds = freelancer.Specializations
+				.Select(s => s.CategoryId)
 				.ToHashSet();
-
-			foreach (var spec in freelancer.Specializations)
-				freelancerSpecialtyIds.Add(spec.CategoryId);
 
 			var matchingJobs = new List<(JobDto job, decimal value)>();
 
@@ -99,7 +109,7 @@ namespace Service.Services
 			{
 				if (!IsDeadlineFeasible(job, freelancer)) continue;
 
-				var (isMatch, skillsScore) = IsSkillMatch(job, freelancerSkillIds);
+				var (isMatch, skillsScore) = IsSkillMatch(job, freelancerSkillIds, freelancerSpecialtyIds);
 				if (!isMatch) continue;
 
 				decimal baseValue = job.RequiredHours * job.MaxPayPerHour;
@@ -136,18 +146,13 @@ namespace Service.Services
 				for (int h = 0; h <= availableHours; h++)
 				{
 					if (hours > h)
-					{
 						dp[i, h] = dp[i - 1, h];
-					}
 					else
-					{
 						dp[i, h] = Math.Max(dp[i - 1, h], dp[i - 1, h - hours] + value);
-					}
 				}
 			}
 
-			var optimalJobs = ReconstructOptimalJobs(dp, matchingJobs, availableHours);
-			return optimalJobs;
+			return ReconstructOptimalJobs(dp, matchingJobs, availableHours);
 		}
 
 

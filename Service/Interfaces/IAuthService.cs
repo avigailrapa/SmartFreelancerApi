@@ -7,6 +7,5 @@ namespace Service.Interfaces
 		Task<UserDto> Register(RegisterDto register);
 		Task<UserDto> Login(LoginDto login);
 		string GenerateToken(UserDto user);
-		Task DeleteAccount(int userId);
 	}
 }

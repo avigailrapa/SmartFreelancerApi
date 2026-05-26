@@ -10,11 +10,10 @@ namespace SmartFreelancerApi.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class FreelancerController(IFreelancerService service, IAuthService authService, IUserService userService) : ControllerBase
+	public class FreelancerController(IFreelancerService service, IAuthService authService) : ControllerBase
 	{
 		private readonly IAuthService authService = authService;
 		private readonly IFreelancerService service = service;
-		private readonly IUserService userService = userService;
 
 
 		// GET: api/<FreelancerController>
@@ -48,20 +47,6 @@ namespace SmartFreelancerApi.Controllers
 		{
 			return await service.UpdateItem(User.GetFreelancerId().Value, freelancer);
 		}
-
-		//// PUT api/<FreelancerController>/availability
-		//[HttpPut("availability")]
-		//public async Task<IActionResult> UpdateAvailability([FromBody] UpdateAvailabilityDto dto)
-		//{
-		//	var freelancerId = User.GetUserId();
-
-		//	await service.UpdateAvailability((int)freelancerId, dto);
-
-		//	return NoContent();
-
-		//}
-
-
 
 
 	}

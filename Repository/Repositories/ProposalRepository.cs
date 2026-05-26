@@ -1,7 +1,6 @@
 ﻿using Common.Enums;
 using Microsoft.EntityFrameworkCore;
 using Repository.Entities;
-using Repository.interfaces;
 using Repository.Interfaces;
 
 namespace Repository.Repositories

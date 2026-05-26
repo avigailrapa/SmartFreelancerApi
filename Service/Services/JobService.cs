@@ -3,7 +3,6 @@ using Common.Dto;
 using Common.Enums;
 using Common.Exceptions;
 using Repository.Entities;
-using Repository.interfaces;
 using Repository.Interfaces;
 using Service.Interfaces;
 
@@ -17,6 +16,9 @@ namespace Service.Services
 
 		public async Task<JobDto> AddItem(CreateJobDto createJob, int clientId)
 		{
+			if (createJob.Deadline <= DateTime.Now)
+				throw new BadRequestException("Deadline must be a future date");
+
 			var job = new Job
 			{
 				Title = createJob.Title,
@@ -37,6 +39,15 @@ namespace Service.Services
 					job.RequiredSkills.Add(skill);
 				}
 			}
+
+			if (createJob.SpecialtyCategoryId > 0)
+			{
+				job.RequiredSkills ??= [];
+				var specialty = await categoryRepository.GetById(createJob.SpecialtyCategoryId)
+					?? throw new NotFoundException($"Specialty not found");
+				job.RequiredSkills.Add(specialty);
+			}
+
 
 			var entity = await repository.AddItem(job);
 			return mapper.Map<JobDto>(entity);
@@ -86,11 +97,17 @@ namespace Service.Services
 
 		public async Task<JobDto> MarkAsCompleted(int jobId, int freelancerId)
 		{
-			var job = await repository.GetById(jobId) ?? throw new NotFoundException("Job not found");
-			if (job.AssignedFreelancerId != freelancerId) throw new UnauthorizedAccessException("You are not authorized to complete this job");
-			job.Status = JobStatus.Completed;
-			await repository.UpdateItem(jobId, job);
-			return mapper.Map<JobDto>(job);
+			var job = await repository.GetById(jobId)
+				?? throw new NotFoundException("Job not found");
+			if (job.AssignedFreelancerId != freelancerId)
+				throw new UnauthorizedAccessException("You are not authorized");
+
+			await repository.MarkAsCompleted(jobId);
+
+			// בלי job.Status = ... כאן!
+			// פשוט צרי JobDto ידנית או שלפי מחדש:
+			var updatedJob = await repository.GetById(jobId);
+			return mapper.Map<JobDto>(updatedJob);
 		}
 
 	}

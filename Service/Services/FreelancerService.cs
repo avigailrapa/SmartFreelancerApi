@@ -2,16 +2,16 @@
 using Common.Dto;
 using Common.Exceptions;
 using Repository.Entities;
-using Repository.interfaces;
+using Repository.Interfaces;
 using Service.Interfaces;
 
 namespace Service.Services
 {
-	public class FreelancerService(IRepository<Freelancer> repository, IMapper mapper, IRepository<User> userRepository, IRepository<Category> categoryRepository) : IFreelancerService
+	public class FreelancerService(IRepository<Freelancer> repository, IMapper mapper, IUserRepository userRepository, IRepository<Category> categoryRepository) : IFreelancerService
 	{
 		private readonly IRepository<Freelancer> repository = repository;
 		private readonly IMapper mapper = mapper;
-		private readonly IRepository<User> userRepository = userRepository;
+		private readonly IUserRepository userRepository = userRepository;
 		private readonly IRepository<Category> categoryRepository = categoryRepository;
 
 
@@ -27,12 +27,6 @@ namespace Service.Services
 			return mapper.Map<FreelancerDto>(freelancer);
 		}
 
-		public async Task<FreelancerDto> UpdateItem(int id, FreelancerDto freelancer)
-		{
-			var exists = await repository.GetById(id) ?? throw new NotFoundException("Freelancer not found");
-			var updated = await repository.UpdateItem(id, mapper.Map<Freelancer>(freelancer));
-			return mapper.Map<FreelancerDto>(updated);
-		}
 
 		public async Task<UserDto> BecomeFreelancer(int userId, BecomeFreelancerDto freelancerDto)
 		{
@@ -41,25 +35,12 @@ namespace Service.Services
 			if (user.FreelancerProfile != null)
 				throw new BadRequestException("User is already a freelancer");
 
-			string fileName = string.Empty;
-			if (freelancerDto.ImageFile != null)
-			{
-				fileName = Guid.NewGuid() + Path.GetExtension(freelancerDto.ImageFile.FileName);
-				var path = Path.Combine(Environment.CurrentDirectory, "Images/", fileName);
-
-				using var fs = new FileStream(path, FileMode.Create);
-				await freelancerDto.ImageFile.CopyToAsync(fs);
-			}
-
 			var freelancer = mapper.Map<Freelancer>(freelancerDto);
-			freelancer.Image = fileName;
-
 			freelancer.UserId = userId;
 
 			if (freelancerDto.SkillIds != null)
 			{
 				freelancer.Skills = [];
-
 				foreach (var id in freelancerDto.SkillIds)
 				{
 					var category = await categoryRepository.GetById(id) ?? throw new BadRequestException($"Category with id {id} not found");
@@ -70,7 +51,6 @@ namespace Service.Services
 			if (freelancerDto.SpecializationIds != null)
 			{
 				freelancer.Specializations = [];
-
 				foreach (var id in freelancerDto.SpecializationIds)
 				{
 					var category = await categoryRepository.GetById(id) ?? throw new BadRequestException($"Category with id {id} not found");
@@ -79,6 +59,20 @@ namespace Service.Services
 			}
 
 			var createdFreelancer = await repository.AddItem(freelancer);
+
+			if (freelancerDto.ImageFile != null)
+			{
+				var fileName = Guid.NewGuid() + Path.GetExtension(freelancerDto.ImageFile.FileName);
+				var imagesPath = Path.Combine(Environment.CurrentDirectory, "Images");
+				Directory.CreateDirectory(imagesPath);
+				var path = Path.Combine(imagesPath, fileName);
+
+				using var fs = new FileStream(path, FileMode.Create);
+				await freelancerDto.ImageFile.CopyToAsync(fs);
+
+				createdFreelancer.Image = fileName;
+				await repository.UpdateItem(createdFreelancer.FreelancerId, createdFreelancer);
+			}
 
 			user.FreelancerProfile = createdFreelancer;
 			await userRepository.UpdateItem(userId, user);
@@ -91,39 +85,19 @@ namespace Service.Services
 				FreelancerId = createdFreelancer.FreelancerId
 			};
 		}
-		//public async Task UpdateAvailability(int freelancerId, UpdateAvailabilityDto dto)
-		//{
-		//	var freelancer = await repository.GetById(freelancerId)
-		//		?? throw new NotFoundException("Freelancer not found");
 
-		//	if (dto.AvailableHours < 0)
-		//		throw new BadRequestException("Available hours cannot be negative");
-
-		//	if (dto.AvailableUntil < DateTime.UtcNow)
-		//		throw new BadRequestException("AvailableUntil must be a future date");
-
-		//	freelancer.AvailableHours = dto.AvailableHours;
-		//	freelancer.AvailableUntil = dto.AvailableUntil;
-
-		//	await repository.UpdateItem(freelancer.FreelancerId, freelancer);
-		//}
+		public async Task<FreelancerDto> UpdateItem(int id, FreelancerDto freelancer)
+		{
+			_ = await repository.GetById(id) ?? throw new NotFoundException("Freelancer not found");
+			var updated = await repository.UpdateItem(id, mapper.Map<Freelancer>(freelancer));
+			return mapper.Map<FreelancerDto>(updated);
+		}
 
 		public async Task DeductHoursAfterJobAccepted(int freelancerId, int jobRequiredHours)
 		{
 			var freelancer = await repository.GetById(freelancerId) ?? throw new NotFoundException("Freelancer not found");
-
 			freelancer.AvailableHours = Math.Max(0, freelancer.AvailableHours - jobRequiredHours);
-
 			await repository.UpdateItem(freelancer.FreelancerId, freelancer);
 		}
 	}
 }
-
-
-
-
-
-
-
-
-

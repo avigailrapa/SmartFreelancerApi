@@ -3,7 +3,7 @@ using Common.Dto.Common.Dto;
 using Common.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Service.Services;
+using Service.Interfaces;
 using SmartFreelancerApi.Extensions;
 
 
@@ -11,9 +11,9 @@ namespace SmartFreelancerApi.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class RatingController(RatingService service) : ControllerBase
+	public class RatingController(IRatingService service) : ControllerBase
 	{
-		private readonly RatingService service = service;
+		private readonly IRatingService service = service;
 
 		// POST api/<RatingController>
 		[Authorize(Roles = "User")]

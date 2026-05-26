@@ -1,6 +1,6 @@
-﻿using System.Text;
-using AutoMapper;
+﻿using AutoMapper;
 using Common.Dto;
+using Common.Enums;
 using Repository.Entities;
 
 namespace Service.Services;
@@ -27,8 +27,7 @@ public class MapperProfile : Profile
 			.ReverseMap();
 
 		CreateMap<Freelancer, FreelancerDto>()
-			.ForMember(dest => dest.ArrImage, opt => opt.MapFrom(src =>
-				Encoding.UTF8.GetBytes(src.Image)))
+			.ForMember(dest => dest.ArrImage, opt => opt.Ignore())
 			.ForMember(dest => dest.ImageFile, opt => opt.Ignore())
 			.ForMember(dest => dest.UserName, opt => opt.MapFrom(src =>
 				src.User != null ? src.User.FullName : null))
@@ -45,30 +44,38 @@ public class MapperProfile : Profile
 			.ForMember(dest => dest.SpecializationNames, opt => opt.MapFrom(src =>
 				src.Specializations.Select(s => s.Name)))
 			.ForMember(dest => dest.AverageStars, opt => opt.MapFrom(src =>
-				src.RatingsReceived != null && src.RatingsReceived.Any() ? src.RatingsReceived.Average(r => r.Stars) : (double?)null))
-				.ForMember(dest => dest.LatestRating, opt => opt.MapFrom(src =>
-	src.RatingsReceived != null
-		? src.RatingsReceived.OrderByDescending(r => r.CreatedAt).FirstOrDefault()
-		: null)).ReverseMap()
-	.ForMember(dest => dest.Image, opt => opt.Ignore())
-	.ForMember(dest => dest.User, opt => opt.Ignore())
-	.ForMember(dest => dest.MainCategory, opt => opt.Ignore())
-	.ForMember(dest => dest.Skills, opt => opt.Ignore())
-	.ForMember(dest => dest.Specializations, opt => opt.Ignore())
-	.ForMember(dest => dest.RatingsReceived, opt => opt.Ignore());
-
+				src.RatingsReceived != null && src.RatingsReceived.Any()
+					? src.RatingsReceived.Average(r => r.Stars)
+					: (double?)null))
+			.ForMember(dest => dest.LatestRating, opt => opt.MapFrom(src =>
+				src.RatingsReceived != null
+					? src.RatingsReceived.OrderByDescending(r => r.CreatedAt).FirstOrDefault()
+					: null))
+			.ReverseMap()
+			.ForMember(dest => dest.Image, opt => opt.Ignore())
+			.ForMember(dest => dest.User, opt => opt.Ignore())
+			.ForMember(dest => dest.MainCategory, opt => opt.Ignore())
+			.ForMember(dest => dest.Skills, opt => opt.Ignore())
+			.ForMember(dest => dest.Specializations, opt => opt.Ignore())
+			.ForMember(dest => dest.RatingsReceived, opt => opt.Ignore());
 
 		CreateMap<Job, JobDto>()
-			.ForMember(dest => dest.ClientName, opt => opt.MapFrom(src =>
-				src.Client.FullName))
-			.ForMember(dest => dest.MainCategoryName, opt => opt.MapFrom(src =>
-				src.MainCategory.Name))
-			.ForMember(dest => dest.AssignedFreelancerName, opt => opt.MapFrom(src =>
-				src.AssignedFreelancer != null ? src.AssignedFreelancer.User.FullName : null))
-			.ForMember(dest => dest.RequiredSkillIds, opt => opt.MapFrom(src =>
-				src.RequiredSkills.Select(s => s.CategoryId)))
-			.ForMember(dest => dest.RequiredSkillNames, opt => opt.MapFrom(src =>
-				src.RequiredSkills.Select(s => s.Name)));
+		.ForMember(dest => dest.ClientName, opt => opt.MapFrom(src =>
+			src.Client.FullName))
+		.ForMember(dest => dest.MainCategoryName, opt => opt.MapFrom(src =>
+			src.MainCategory.Name))
+		.ForMember(dest => dest.AssignedFreelancerName, opt => opt.MapFrom(src =>
+			src.AssignedFreelancer != null ? src.AssignedFreelancer.User.FullName : null))
+		.ForMember(dest => dest.RequiredSkillIds, opt => opt.MapFrom(src =>
+			src.RequiredSkills.Where(s => s.Type == CategoryType.Skill).Select(s => s.CategoryId)))
+		.ForMember(dest => dest.RequiredSkillNames, opt => opt.MapFrom(src =>
+			src.RequiredSkills.Where(s => s.Type == CategoryType.Skill).Select(s => s.Name)))
+		.ForMember(dest => dest.SpecialtyCategoryId, opt => opt.MapFrom(src =>
+			src.RequiredSkills.Where(s => s.Type == CategoryType.Specialty)
+				.Select(s => s.CategoryId).FirstOrDefault()))
+		.ForMember(dest => dest.SpecialtyCategoryName, opt => opt.MapFrom(src =>
+			src.RequiredSkills.Where(s => s.Type == CategoryType.Specialty)
+				.Select(s => s.Name).FirstOrDefault()));
 
 		CreateMap<Rating, RatingDto>()
 			.ForMember(dest => dest.UserName, opt => opt.MapFrom(src =>

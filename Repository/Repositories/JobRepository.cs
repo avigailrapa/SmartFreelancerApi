@@ -1,7 +1,6 @@
 ﻿using Common.Enums;
 using Microsoft.EntityFrameworkCore;
 using Repository.Entities;
-using Repository.interfaces;
 using Repository.Interfaces;
 
 namespace Repository.Repositories
@@ -46,6 +45,7 @@ namespace Repository.Repositories
 			return await ctx.Jobs
 			   .Include(j => j.Client)
 			   .Include(j => j.AssignedFreelancer)
+			   .ThenInclude(f => f.User)
 			   .Include(j => j.RequiredSkills)
 			   .Include(j => j.MainCategory)
 			   .FirstOrDefaultAsync(j => j.JobId == id);
@@ -101,6 +101,15 @@ namespace Repository.Repositories
 				   .Where(j => j.AssignedFreelancerId == freelancerId &&
 							  (j.Status == JobStatus.InProgress || j.Status == JobStatus.Completed))
 				   .ToListAsync();
+		}
+		public async Task MarkAsCompleted(int jobId)
+		{
+			var j = await ctx.Jobs.FirstOrDefaultAsync(j => j.JobId == jobId);
+			if (j != null)
+			{
+				j.Status = JobStatus.Completed;
+				await ctx.Save();
+			}
 		}
 	}
 }

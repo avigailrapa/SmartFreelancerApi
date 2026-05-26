@@ -3,10 +3,11 @@ using Common.Dto;
 using Common.Dto.Common.Dto;
 using Repository.Entities;
 using Repository.Repositories;
+using Service.Interfaces;
 
 namespace Service.Services
 {
-	public class RatingService(RatingRepository repository, IMapper mapper)
+	public class RatingService(RatingRepository repository, IMapper mapper) : IRatingService
 	{
 		private readonly RatingRepository repository = repository;
 		private readonly IMapper mapper = mapper;

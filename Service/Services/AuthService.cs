@@ -1,22 +1,20 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AutoMapper;
 using Common.Dto;
 using Common.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Repository.Entities;
-using Repository.interfaces;
+using Repository.Interfaces;
 using Service.Interfaces;
 
 namespace Service.Services
 {
-	internal class AuthService(IRepository<User> userRepository, IMapper mapper, IConfiguration configuration) : IAuthService
+	internal class AuthService(IUserRepository userRepository, IConfiguration configuration) : IAuthService
 	{
-		private readonly IRepository<User> userRepository = userRepository;
-		private readonly IMapper mapper = mapper;
+		private readonly IUserRepository userRepository = userRepository;
 		private readonly IConfiguration configuration = configuration;
 
 		public async Task<UserDto> Login(LoginDto login)
@@ -26,9 +24,7 @@ namespace Service.Services
 
 			var emailNormalized = login.Email.Trim().ToLowerInvariant();
 
-			var users = await userRepository.GetAll();
-
-			var user = users.FirstOrDefault(u => u.Email.Trim().ToLowerInvariant() == emailNormalized)
+			var user = await userRepository.GetByEmail(emailNormalized)
 					   ?? throw new UnauthorizedException("Invalid email or password");
 
 			var hasher = new PasswordHasher<User>();
@@ -90,11 +86,7 @@ namespace Service.Services
 			};
 		}
 
-		public async Task DeleteAccount(int userId)
-		{
-			var user = await userRepository.GetById(userId) ?? throw new NotFoundException("User not found");
-			await userRepository.DeleteItem(userId);
-		}
+
 
 		public string GenerateToken(UserDto u)
 		{

@@ -76,36 +76,6 @@ namespace Service.Services
 			return mapper.Map<List<ProposalDto>>(proposal);
 		}
 
-		public async Task<ProposalDto> InviteFreelancer(int freelancerId, int jobId, decimal price, int hours, string message, int clientId, string clientName)
-		{
-			var job = await jobRepository.GetById(jobId) ?? throw new NotFoundException("Job not found");
-
-			if (job.Status != JobStatus.Open)
-				throw new ConflictException("Job is not open");
-
-			if (await repository.Exists(freelancerId, jobId))
-				throw new ConflictException("Proposal or invite already exists for this job");
-
-			var proposal = new Proposal
-			{
-				FreelancerId = freelancerId,
-				JobId = jobId,
-				HourlyRate = price,
-				EstimatedHours = hours,
-				Message = message,
-				Status = ProposalStatus.Pending,
-				CreatedAt = DateTime.UtcNow,
-				IsClientInvite = true,
-				ClientId = clientId,
-				ClientName = clientName
-
-			};
-
-			await repository.Add(proposal);
-			return mapper.Map<ProposalDto>(proposal);
-
-		}
-
 		public async Task RejectProposal(int proposalId)
 		{
 			var proposal = await repository.GetById(proposalId) ?? throw new NotFoundException("Proposal not found");
@@ -119,12 +89,15 @@ namespace Service.Services
 
 		}
 
-		public async Task<ProposalDto> SendProposal(int freelancerId, int jobId, decimal price, int hours, string message)
+		public async Task<ProposalDto> SendProposal(int clientId, int freelancerId, int jobId, decimal price, int hours, string message)
 		{
 			if (await repository.Exists(freelancerId, jobId))
 				throw new ConflictException("Proposal already exists for this job");
 
 			var job = await jobRepository.GetById(jobId) ?? throw new NotFoundException("Job not found");
+
+			if (job.ClientId == clientId)
+				throw new ConflictException("You cannot submit a proposal to your own job post");
 
 			if (job.Status != JobStatus.Open)
 				throw new ConflictException("Cannot send proposal to a job that is not open");
